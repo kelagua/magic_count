@@ -36,19 +36,19 @@ export default function MonthlySummaryList({ data, onMonthPress }: MonthlySummar
         <Text style={styles.monthText}>{item.month}月</Text>
         <View style={styles.amounts}>
           <View style={styles.amountCol}>
-            <Text style={styles.amountLabel}>收入</Text>
+            <Text style={styles.amountLabel}>回款</Text>
             <Text style={styles.incomeText}>
               {item.income > 0 ? `+${item.income.toFixed(2)}` : '0.00'}
             </Text>
           </View>
           <View style={styles.amountCol}>
-            <Text style={styles.amountLabel}>支出</Text>
+            <Text style={styles.amountLabel}>赊账</Text>
             <Text style={styles.expenseText}>
               {item.expense > 0 ? `-${item.expense.toFixed(2)}` : '0.00'}
             </Text>
           </View>
           <View style={styles.amountCol}>
-            <Text style={styles.amountLabel}>结余</Text>
+            <Text style={styles.amountLabel}>差额</Text>
             <Text
               style={[
                 styles.netText,

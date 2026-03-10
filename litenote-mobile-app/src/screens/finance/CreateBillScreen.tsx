@@ -201,14 +201,14 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* 支出/收入切换 */}
+          {/* 赊账/回款切换 */}
           <View style={styles.typeSelector}>
             <TouchableOpacity
               style={[styles.typeButton, type === 'expense' && styles.typeButtonExpenseActive]}
               onPress={() => handleTypeChange('expense')}
             >
               <Text style={[styles.typeButtonText, type === 'expense' && styles.typeButtonTextActive]}>
-                支出
+                赊账
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -216,7 +216,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
               onPress={() => handleTypeChange('income')}
             >
               <Text style={[styles.typeButtonText, type === 'income' && styles.typeButtonTextActive]}>
-                收入
+                回款
               </Text>
             </TouchableOpacity>
           </View>

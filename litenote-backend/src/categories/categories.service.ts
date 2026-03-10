@@ -248,7 +248,7 @@ export class CategoriesService {
         sortOrder: 2,
       },
       {
-        name: '其他收入',
+        name: '其他收款',
         type: 'income',
         icon: '📈',
         color: '#F8C471',

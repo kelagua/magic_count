@@ -46,7 +46,7 @@ export default function TransactionItem({
       <View style={styles.content}>
         <View style={styles.mainRow}>
           <Text style={styles.category} numberOfLines={1}>
-            {categoryName || (isIncome ? '收入' : '支出')}
+            {categoryName || (isIncome ? '回款' : '赊账')}
           </Text>
           <View style={[
             styles.amountBadge,

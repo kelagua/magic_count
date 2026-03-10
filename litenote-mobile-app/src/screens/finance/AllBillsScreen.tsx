@@ -120,13 +120,13 @@ const AllBillsScreen: React.FC = () => {
             style={[styles.filterBtn, filter === 'expense' && styles.filterBtnActive]}
             onPress={() => setFilter('expense')}
           >
-            <Text style={[styles.filterText, filter === 'expense' && styles.filterTextActive]}>支出</Text>
+            <Text style={[styles.filterText, filter === 'expense' && styles.filterTextActive]}>赊账</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterBtn, filter === 'income' && styles.filterBtnActive]}
             onPress={() => setFilter('income')}
           >
-            <Text style={[styles.filterText, filter === 'income' && styles.filterTextActive]}>收入</Text>
+            <Text style={[styles.filterText, filter === 'income' && styles.filterTextActive]}>回款</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterBtn, timeRange === 'month' && styles.filterBtnActive]}

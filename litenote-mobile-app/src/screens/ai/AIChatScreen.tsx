@@ -180,7 +180,7 @@ function EditBillModal({
                       type === 'expense' && modalStyles.typeButtonTextActive,
                     ]}
                   >
-                    支出
+                    赊账
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -196,7 +196,7 @@ function EditBillModal({
                       type === 'income' && modalStyles.typeButtonTextActiveIncome,
                     ]}
                   >
-                    收入
+                    回款
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1717,7 +1717,7 @@ export default function AIChatScreen() {
       其他农资: '📦',
       客户回款: '💵',
       现金收款: '💰',
-      其他收入: '📈',
+      其他收款: '📈',
       其他: '📦',
     };
     return iconMap[categoryName] || '📦';
@@ -1938,19 +1938,19 @@ export default function AIChatScreen() {
               <Text style={styles.messageText}>{item.content}</Text>
               <View style={toolCardStyles.statsContainer}>
                 <View style={toolCardStyles.statsRow}>
-                  <Text style={toolCardStyles.statsLabel}>总支出</Text>
+                  <Text style={toolCardStyles.statsLabel}>总赊账</Text>
                   <Text style={[toolCardStyles.statsValue, { color: '#FF5722' }]}>
                     ¥{Number(stats.totalExpense || 0).toFixed(2)}
                   </Text>
                 </View>
                 <View style={toolCardStyles.statsRow}>
-                  <Text style={toolCardStyles.statsLabel}>总收入</Text>
+                  <Text style={toolCardStyles.statsLabel}>总回款</Text>
                   <Text style={[toolCardStyles.statsValue, { color: '#4CAF50' }]}>
                     ¥{Number(stats.totalIncome || 0).toFixed(2)}
                   </Text>
                 </View>
                 <View style={[toolCardStyles.statsRow, { borderBottomWidth: 0 }]}>
-                  <Text style={toolCardStyles.statsLabel}>结余</Text>
+                  <Text style={toolCardStyles.statsLabel}>差额</Text>
                   <Text style={[toolCardStyles.statsValue, { fontWeight: '700' }]}>
                     ¥{(Number(stats.totalIncome || 0) - Number(stats.totalExpense || 0)).toFixed(2)}
                   </Text>

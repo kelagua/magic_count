@@ -27,9 +27,9 @@ const periodOptions = [
 ];
 
 const dataTypeOptions = [
-  { key: 'expense', label: '支出' },
-  { key: 'income', label: '收入' },
-  { key: 'balance', label: '结余' },
+  { key: 'expense', label: '赊账' },
+  { key: 'income', label: '回款' },
+  { key: 'balance', label: '差额' },
 ];
 
 interface TrendDataPoint {
@@ -186,7 +186,7 @@ export default function TrendAnalysisScreen() {
       {/* 趋势图表 */}
       <View style={styles.chartCard}>
         <Text style={styles.chartTitle}>
-          {dataType === 'expense' ? '📉 支出趋势' : dataType === 'income' ? '📈 收入趋势' : '💰 结余趋势'}
+          {dataType === 'expense' ? '📉 赊账趋势' : dataType === 'income' ? '📈 回款趋势' : '💰 差额趋势'}
         </Text>
         {trendData.length > 0 ? (
           <View style={styles.chartWrapper}>

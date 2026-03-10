@@ -19,8 +19,8 @@ import { billsService } from '../../services';
 type TypeFilter = 'expense' | 'income';
 
 const typeOptions = [
-  { key: 'expense', label: '支出' },
-  { key: 'income', label: '收入' },
+  { key: 'expense', label: '赊账' },
+  { key: 'income', label: '回款' },
 ];
 
 interface CategoryStat {
@@ -113,7 +113,7 @@ export default function CategoryAnalysisScreen() {
       {/* 总额 */}
       <View style={styles.totalCard}>
         <Text style={styles.totalLabel}>
-          {typeFilter === 'expense' ? '💸 总支出' : '💰 总收入'}
+          {typeFilter === 'expense' ? '💸 总赊账' : '💰 总回款'}
         </Text>
         <Text style={[
           styles.totalValue,

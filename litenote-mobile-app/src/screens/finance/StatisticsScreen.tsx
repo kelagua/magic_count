@@ -191,7 +191,7 @@ const StatisticsScreen: React.FC = () => {
                         showLegend={false}
                       />
                       <View style={styles.chartCenterText}>
-                        <Text style={styles.centerLabel}>总支出</Text>
+                        <Text style={styles.centerLabel}>总赊账</Text>
                         <Text style={styles.centerValue}>
                           ¥{statistics.totalExpense.toFixed(0)}
                         </Text>
@@ -232,9 +232,9 @@ const StatisticsScreen: React.FC = () => {
                     <View style={styles.emptyChartIcon}>
                       <Text style={styles.emptyChartIconText}>📊</Text>
                     </View>
-                    <Text style={styles.emptyChartTitle}>暂无支出数据</Text>
+                    <Text style={styles.emptyChartTitle}>暂无赊账数据</Text>
                     <Text style={styles.emptyChartSubtitle}>
-                      开始记录您的支出，查看分类占比
+                      开始记录赊账，查看分类占比
                     </Text>
                   </View>
                 </View>
@@ -246,28 +246,28 @@ const StatisticsScreen: React.FC = () => {
                   <Text style={[styles.statValue, styles.incomeValue]}>
                     ¥{statistics?.totalIncome.toFixed(2) || '0.00'}
                   </Text>
-                  <Text style={styles.statLabel}>总收入</Text>
+                  <Text style={styles.statLabel}>总回款</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={[styles.statValue, styles.expenseValue]}>
                     ¥{statistics?.totalExpense.toFixed(2) || '0.00'}
                   </Text>
-                  <Text style={styles.statLabel}>总支出</Text>
+                  <Text style={styles.statLabel}>总赊账</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={styles.statValue}>
                     ¥{statistics?.balance.toFixed(2) || '0.00'}
                   </Text>
-                  <Text style={styles.statLabel}>结余</Text>
+                  <Text style={styles.statLabel}>往来差额</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={styles.statValue}>{expensePercent}%</Text>
-                  <Text style={styles.statLabel}>支出占比</Text>
+                  <Text style={styles.statLabel}>赊账占比</Text>
                 </View>
               </View>
 
               {/* 收入分类占比 */}
-              <Text style={styles.sectionTitle}>💰 收入分类占比</Text>
+              <Text style={styles.sectionTitle}>💰 回款分类占比</Text>
               {incomeCategoryStats.length > 0 &&
               statistics &&
               statistics.totalIncome > 0 ? (

@@ -16,7 +16,7 @@ export const DEFAULT_CATEGORIES = {
   INCOME: [
     { name: '客户回款', icon: '💰', color: '#4CAF50' },
     { name: '现金收款', icon: '💵', color: '#8BC34A' },
-    { name: '其他收入', icon: '📈', color: '#009688' },
+    { name: '其他收款', icon: '📈', color: '#009688' },
   ],
   EXPENSE: [
     { name: '种子', icon: '🌾', color: '#FFB703' },

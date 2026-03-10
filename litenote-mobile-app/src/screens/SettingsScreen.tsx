@@ -13,8 +13,6 @@ import {
   Switch,
 } from 'react-native';
 import {
-  Wallet,
-  Flag,
   Settings,
   Moon,
   Info,
@@ -87,8 +85,6 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   } = useAppUpdate({ autoCheck: false });
 
   const iconMap: Record<string, React.FC<{ size: number; color: string }>> = {
-    wallet: Wallet,
-    flag: Flag,
     settings: Settings,
     moon: Moon,
     info: Info,
@@ -96,13 +92,6 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   };
 
   const settingGroups: SettingGroup[] = [
-    {
-      title: '💰 财务',
-      items: [
-        { id: 'budget-manage', label: '预算管理', icon: 'wallet', onPress: () => navigation?.navigate('Budgets') },
-        { id: 'financial-goals', label: '财务目标', icon: 'flag', onPress: () => navigation?.navigate('FinancialGoals') },
-      ],
-    },
     {
       title: '⚙️ 应用',
       items: [
