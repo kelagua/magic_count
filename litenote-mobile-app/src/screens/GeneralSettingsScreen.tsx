@@ -28,10 +28,6 @@ import type {
 import { AI_PROVIDERS } from '../types/ai';
 import { ProviderIcon } from '../components/icons';
 
-interface GeneralSettingsScreenProps {
-  navigation?: any;
-}
-
 // AI 模型配置编辑弹窗
 interface AIConfigModalProps {
   visible: boolean;
@@ -491,7 +487,7 @@ const createModalStyles = (colors: ThemeColors) =>
     },
   });
 
-export default function GeneralSettingsScreen(_: GeneralSettingsScreenProps) {
+export default function GeneralSettingsScreen() {
   const styles = useStyles(createStyles);
   const { alert, confirm } = useAlert();
 
