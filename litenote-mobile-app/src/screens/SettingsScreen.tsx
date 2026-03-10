@@ -108,7 +108,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
       items: [
         {
           id: 'general-settings',
-          label: '通用配置',
+          label: 'AI 模型配置',
           icon: 'settings',
           onPress: () => navigation?.navigate('GeneralSettings'),
         },

@@ -20,7 +20,7 @@ export default function PrivacyPolicyScreen() {
 
           <Text style={styles.sectionTitle}>引言</Text>
           <Text style={styles.paragraph}>
-            智能记账应用（以下简称"我们"）深知个人信息对您的重要性，我们将按照法律法规要求，采取相应安全保护措施，尽力保护您的个人信息安全可控。
+            农资赊账管理应用（以下简称"我们"）深知个人信息和经营数据对您的重要性，我们将按照法律法规要求，采取相应安全保护措施，尽力保护您的信息安全可控。
           </Text>
 
           <Text style={styles.sectionTitle}>一、我们收集的信息</Text>
@@ -31,9 +31,9 @@ export default function PrivacyPolicyScreen() {
             • 邮箱地址（可选）{'\n'}
             • 头像（可选）{'\n\n'}
             <Text style={styles.subTitle}>2. 财务数据</Text>{'\n'}
-            • 您记录的收入和支出信息{'\n'}
-            • 账单分类和标签{'\n'}
-            • 预算设置{'\n\n'}
+            • 您记录的农民赊账、回款和对账信息{'\n'}
+            • 账目分类和标签{'\n'}
+            • AI 统计分析相关配置{'\n\n'}
             <Text style={styles.subTitle}>3. 设备信息</Text>{'\n'}
             • 设备型号、操作系统版本{'\n'}
             • 应用版本号{'\n'}
@@ -44,7 +44,7 @@ export default function PrivacyPolicyScreen() {
           <Text style={styles.paragraph}>
             我们收集的信息将用于：{'\n'}
             • 提供、维护和改进我们的服务{'\n'}
-            • 为您提供个性化的财务分析和建议{'\n'}
+            • 为您提供农资赊账统计、对账和经营分析{'\n'}
             • 保护您的账户安全{'\n'}
             • 发送服务通知和更新信息{'\n'}
             • 进行数据分析以改善用户体验
@@ -72,7 +72,7 @@ export default function PrivacyPolicyScreen() {
             • 访问和查看您的个人信息{'\n'}
             • 更正不准确的信息{'\n'}
             • 删除您的账户和相关数据{'\n'}
-            • 导出您的财务数据{'\n'}
+            • 导出您的账目与经营数据{'\n'}
             • 撤回同意
           </Text>
 

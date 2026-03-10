@@ -41,7 +41,8 @@ export class CategoriesService {
         data: {
           id: userId,
           username: 'testuser',
-          password: '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', // 123456
+          password:
+            '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', // 123456
           email: 'test@example.com',
           nickname: '测试用户',
         },
@@ -175,52 +176,52 @@ export class CategoriesService {
     const defaultCategories = [
       // 支出分类
       {
-        name: '餐饮',
+        name: '种子',
         type: 'expense',
-        icon: '🍔',
-        color: '#FF6B6B',
+        icon: '🌾',
+        color: '#FFB703',
         sortOrder: 1,
       },
       {
-        name: '交通',
+        name: '化肥',
         type: 'expense',
-        icon: '🚗',
-        color: '#4ECDC4',
+        icon: '🧪',
+        color: '#219EBC',
         sortOrder: 2,
       },
       {
-        name: '购物',
+        name: '农药',
         type: 'expense',
-        icon: '🛍️',
-        color: '#45B7D1',
+        icon: '🛡️',
+        color: '#FB8500',
         sortOrder: 3,
       },
       {
-        name: '娱乐',
+        name: '农机',
         type: 'expense',
-        icon: '🎮',
-        color: '#96CEB4',
+        icon: '🚜',
+        color: '#8E44AD',
         sortOrder: 4,
       },
       {
-        name: '医疗',
+        name: '农具',
         type: 'expense',
-        icon: '🏥',
-        color: '#FFEAA7',
+        icon: '🔧',
+        color: '#E63946',
         sortOrder: 5,
       },
       {
-        name: '教育',
+        name: '运输',
         type: 'expense',
-        icon: '📚',
-        color: '#DDA0DD',
+        icon: '🚚',
+        color: '#3F51B5',
         sortOrder: 6,
       },
       {
-        name: '住房',
+        name: '其他农资',
         type: 'expense',
-        icon: '🏠',
-        color: '#98D8C8',
+        icon: '📦',
+        color: '#795548',
         sortOrder: 7,
       },
       {
@@ -233,21 +234,21 @@ export class CategoriesService {
 
       // 收入分类
       {
-        name: '工资',
+        name: '客户回款',
         type: 'income',
         icon: '💰',
         color: '#58D68D',
         sortOrder: 1,
       },
       {
-        name: '奖金',
+        name: '现金收款',
         type: 'income',
-        icon: '🎁',
+        icon: '💵',
         color: '#85C1E9',
         sortOrder: 2,
       },
       {
-        name: '投资',
+        name: '其他收入',
         type: 'income',
         icon: '📈',
         color: '#F8C471',

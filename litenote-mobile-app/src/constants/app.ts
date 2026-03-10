@@ -14,18 +14,18 @@ export const STORAGE_KEYS = {
 // 默认分类配置
 export const DEFAULT_CATEGORIES = {
   INCOME: [
-    { name: '工资', icon: '💰', color: '#4CAF50' },
-    { name: '奖金', icon: '🎁', color: '#8BC34A' },
-    { name: '投资收益', icon: '📈', color: '#009688' },
+    { name: '客户回款', icon: '💰', color: '#4CAF50' },
+    { name: '现金收款', icon: '💵', color: '#8BC34A' },
+    { name: '其他收入', icon: '📈', color: '#009688' },
   ],
   EXPENSE: [
-    { name: '餐饮', icon: '🍽️', color: '#FF5722' },
-    { name: '交通', icon: '🚗', color: '#FF9800' },
-    { name: '购物', icon: '🛍️', color: '#E91E63' },
-    { name: '娱乐', icon: '🎮', color: '#9C27B0' },
-    { name: '医疗', icon: '💊', color: '#F44336' },
-    { name: '教育', icon: '📚', color: '#3F51B5' },
-    { name: '居住', icon: '🏠', color: '#795548' },
+    { name: '种子', icon: '🌾', color: '#FFB703' },
+    { name: '化肥', icon: '🧪', color: '#219EBC' },
+    { name: '农药', icon: '🛡️', color: '#FB8500' },
+    { name: '农机', icon: '🚜', color: '#8E44AD' },
+    { name: '农具', icon: '🔧', color: '#E63946' },
+    { name: '运输', icon: '🚚', color: '#3F51B5' },
+    { name: '其他农资', icon: '📦', color: '#795548' },
   ],
 } as const;
 

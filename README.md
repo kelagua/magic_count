@@ -1,6 +1,6 @@
 # LiteNote
 
-一款 AI 智能记账应用，支持语音记账、拍照记账、AI 对话记账和支付通知自动记账。
+一款面向农资店赊账场景的 AI 智能记账应用，适合记录农民赊账、回款与往来明细，支持语音记账、拍照记账与 AI 对话统计。
 <p align="center">
  <img src="docs/screenshots/banner.png" alt="LiteNote Banner" width="100%" />
 </p>
@@ -9,7 +9,7 @@
 
 ### AI 智能记账
 
-通过自然语言与 AI 助手对话，自动创建、查询、删除和统计账单，取决了你提供了哪些tool。支持多模型切换（Claude / OpenAI / DeepSeek / Qwen），保留原生llm能力，不局限于记账。
+通过自然语言与 AI 助手对话，自动创建、查询、删除和统计赊账账目。你可以直接问“本月化肥赊了多少？”、“帮我分析本月客户回款情况？”。支持多模型切换（Claude / OpenAI / DeepSeek / Qwen），保留原生 llm 能力，不局限于记账。
 <div align="center">
   <img src="docs/screenshots/textChat1.png" width="48%" alt="AI 对话 1" />
   <img src="docs/screenshots/textChat2.png" width="48%" alt="AI 对话 2" />
@@ -21,7 +21,7 @@
 
 ### 语音记账
 
-按住录音按钮说出消费内容，AI 自动识别并创建账单。
+按住录音按钮说出农资赊销或客户回款内容，AI 自动识别并创建账目。
 <p align="center">
   <img src="docs/screenshots/asrChat.gif" alt="语音记账演示" width="70%" />
   <br />
@@ -29,22 +29,14 @@
 
 ### 拍照记账
 
-拍摄或上传小票、发票，AI 识别自动解析金额、分类和日期,支持多张图片。
+拍摄或上传欠条、单据、送货票据，AI 自动解析金额、分类和日期，支持多张图片。
 <p align="center">
   <img src="docs/screenshots/mutPhotoChat.png" width="80%" alt="拍照记账" />
 </p>
 
-### 支付通知自动记账
+### 极简报表
 
-监听微信、支付宝等应用的支付通知，自动创建对应账单，无需手动录入。
-<div align="center">
-  <img src="docs/screenshots/autoNote1.gif" alt="支付通知自动记账 1" width="48%" />
-  <img src="docs/screenshots/autoNote2.gif" alt="支付通知自动记账 2" width="48%" />
-</div>
-
-### 统计与预算
-
-多维度收支统计、分类趋势图表、预算追踪与超额预警。
+按日 / 月 / 年查看赊账、回款与分类趋势，配合日历组件清楚展示账目变化，不堆砌花哨指标。
 <div align="center">
   <img src="docs/screenshots/chart1.png" width="32%" alt="统计报表1" />
   <img src="docs/screenshots/chart2.png" width="32%" alt="统计报表2" />
@@ -66,6 +58,7 @@
 | **移动端** | React Native 0.81 · TypeScript · React Navigation 7 · React Query 5 |
 | **AI** | 多模型适配器（Claude / OpenAI / DeepSeek / Qwen）· SSE 流式响应 · Tool Calling |
 | **语音** | OpenAI Whisper 兼容协议 ASR |
+| **部署** | 开源代码可自托管，数据与源码掌握在自己手里，零广告 |
 
 ## 项目结构
 

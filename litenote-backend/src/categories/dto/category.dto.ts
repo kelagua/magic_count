@@ -16,7 +16,7 @@ export enum CategoryType {
 export class CreateCategoryDto {
   @ApiProperty({
     description: '分类名称',
-    example: '餐饮',
+    example: '化肥',
     minLength: 1,
     maxLength: 50,
   })
@@ -35,7 +35,7 @@ export class CreateCategoryDto {
 
   @ApiProperty({
     description: '分类图标',
-    example: '🍽️',
+    example: '🧪',
     required: false,
     maxLength: 10,
   })
@@ -46,7 +46,7 @@ export class CreateCategoryDto {
 
   @ApiProperty({
     description: '分类颜色',
-    example: '#FF5722',
+    example: '#219EBC',
     required: false,
     maxLength: 20,
   })
@@ -68,7 +68,7 @@ export class CreateCategoryDto {
 export class UpdateCategoryDto {
   @ApiProperty({
     description: '分类名称',
-    example: '餐饮',
+    example: '化肥',
     required: false,
     minLength: 1,
     maxLength: 50,
@@ -91,7 +91,7 @@ export class UpdateCategoryDto {
 
   @ApiProperty({
     description: '分类图标',
-    example: '🍽️',
+    example: '🧪',
     required: false,
     maxLength: 10,
   })
@@ -102,7 +102,7 @@ export class UpdateCategoryDto {
 
   @ApiProperty({
     description: '分类颜色',
-    example: '#FF5722',
+    example: '#219EBC',
     required: false,
     maxLength: 20,
   })

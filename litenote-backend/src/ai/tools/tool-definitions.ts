@@ -8,7 +8,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: 'create_bills',
     description:
-      '识别并创建账单记录。当用户提到了消费或收入，且信息足够完整（至少有金额）时调用此工具。如果用户没有指定日期，使用今天的日期。如果用户没有明确指定分类，根据描述自动推断最合适的分类。',
+      '识别并创建账单记录。当用户提到了农资赊账、客户回款或收入支出，且信息足够完整（至少有金额）时调用此工具。如果用户没有指定日期，使用今天的日期。如果用户没有明确指定分类，根据描述自动推断最合适的分类。',
     parameters: {
       type: 'object',
       properties: {
@@ -40,13 +40,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
                 description: '日期，YYYY-MM-DD 格式',
               },
             },
-            required: [
-              'amount',
-              'type',
-              'description',
-              'categoryName',
-              'date',
-            ],
+            required: ['amount', 'type', 'description', 'categoryName', 'date'],
           },
         },
       },
@@ -56,7 +50,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: 'query_bills',
     description:
-      '查询用户的账单记录。当用户想查看、搜索或了解某段时间内的账单时调用。',
+      '查询用户的账单记录。当用户想查看、搜索或了解某段时间内的赊账、回款或客户往来时调用。',
     parameters: {
       type: 'object',
       properties: {
@@ -103,7 +97,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: 'get_statistics',
     description:
-      '获取用户的账单统计信息，包括收支总额、分类占比、趋势等。当用户询问统计、消费趋势、分析、总结等问题时调用。',
+      '获取用户的账单统计信息，包括赊账总额、回款总额、分类占比、趋势等。当用户询问统计、趋势、分析、总结等问题时调用。',
     parameters: {
       type: 'object',
       properties: {

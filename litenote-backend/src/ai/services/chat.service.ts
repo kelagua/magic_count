@@ -12,7 +12,11 @@ import {
 } from '../adapters';
 import { ChatMessage, ContentBlock, StreamEvent } from '../types/chat.types';
 import { TOOL_DEFINITIONS } from '../tools/tool-definitions';
-import { ChatRequestDto, ChatResponseDto, ToolResultDto } from '../dto/chat.dto';
+import {
+  ChatRequestDto,
+  ChatResponseDto,
+  ToolResultDto,
+} from '../dto/chat.dto';
 
 /** 触发摘要压缩的消息数阈值 */
 const MESSAGE_THRESHOLD = 20;
@@ -84,25 +88,26 @@ export class ChatService {
     if (images.length > 0) {
       userMessageData.imageUrl = JSON.stringify(images);
     }
-    await this.sessionService.saveMessage(sessionId, userSeqNum, userMessageData);
+    await this.sessionService.saveMessage(
+      sessionId,
+      userSeqNum,
+      userMessageData,
+    );
 
     // 4. 首条消息时自动生成标题（异步，不阻塞）
     if (isNewSession) {
-      this.generateTitle(sessionId, dto.content, adapter, config).catch(
-        (err) => this.logger.warn(`生成标题失败: ${err.message}`),
+      this.generateTitle(sessionId, dto.content, adapter, config).catch((err) =>
+        this.logger.warn(`生成标题失败: ${err.message}`),
       );
     }
 
     // 5. 构建上下文
-    const contextMessages = await this.buildContextMessages(
-      userId,
-      sessionId,
-    );
+    const contextMessages = await this.buildContextMessages(userId, sessionId);
 
     // 6. 工具循环
     const allToolResults: ToolResultDto[] = [];
     let assistantContent = '';
-    let messages = [...contextMessages];
+    const messages = [...contextMessages];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
       this.logger.log(`工具循环第 ${round + 1} 轮 - session ${sessionId}`);
@@ -209,10 +214,7 @@ export class ChatService {
     let isNewSession = false;
     let session: any;
     if (!sessionId) {
-      session = await this.sessionService.createSession(
-        userId,
-        dto.configId,
-      );
+      session = await this.sessionService.createSession(userId, dto.configId);
       sessionId = session.id;
       isNewSession = true;
     } else {
@@ -244,13 +246,21 @@ export class ChatService {
     }
 
     // 4. 保存用户消息（必须在构建上下文之前完成，否则上下文中缺少当前消息）
-    await this.sessionService.saveMessage(sessionId, userSeqNum, userMessageData);
+    await this.sessionService.saveMessage(
+      sessionId,
+      userSeqNum,
+      userMessageData,
+    );
 
     // 5. 构建上下文（此时用户消息已入库，会被包含在上下文中）
-    const contextMessages = await this.buildContextMessages(userId, sessionId, session);
+    const contextMessages = await this.buildContextMessages(
+      userId,
+      sessionId,
+      session,
+    );
 
     // 5. 流式工具循环
-    let messages = [...contextMessages];
+    const messages = [...contextMessages];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
       this.logger.log(`流式工具循环第 ${round + 1} 轮 - session ${sessionId}`);
@@ -268,15 +278,11 @@ export class ChatService {
       >();
       let stopReason: 'end_turn' | 'tool_use' | 'max_tokens' = 'end_turn';
 
-      for await (const event of adapter.chatStream(
-        messages,
-        TOOL_DEFINITIONS,
-        {
-          apiKey: config.apiKey,
-          apiBaseUrl: config.apiBaseUrl,
-          model: config.model,
-        },
-      )) {
+      for await (const event of adapter.chatStream(messages, TOOL_DEFINITIONS, {
+        apiKey: config.apiKey,
+        apiBaseUrl: config.apiBaseUrl,
+        model: config.model,
+      })) {
         switch (event.type) {
           case 'text_delta':
             accumulatedText += event.content || '';
@@ -351,11 +357,12 @@ export class ChatService {
           break;
         }
 
-        this.logger.log(`第 ${round + 1} 轮执行 ${toolCalls.length} 个工具: ${toolCalls.map(t => t.name).join(', ')}`);
+        this.logger.log(
+          `第 ${round + 1} 轮执行 ${toolCalls.length} 个工具: ${toolCalls.map((t) => t.name).join(', ')}`,
+        );
 
         // 保存 assistant 消息（含 toolCalls）
-        const assistantSeq =
-          await this.sessionService.getNextSeqNum(sessionId);
+        const assistantSeq = await this.sessionService.getNextSeqNum(sessionId);
         await this.sessionService.saveMessage(sessionId, assistantSeq, {
           role: 'assistant',
           content: accumulatedText || undefined,
@@ -422,8 +429,8 @@ export class ChatService {
 
     // 6. 异步后台任务（流式完成后执行，避免竞争 API 速率限制）
     if (isNewSession) {
-      this.generateTitle(sessionId, dto.content, adapter, config).catch(
-        (err) => this.logger.warn(`生成标题失败: ${err.message}`),
+      this.generateTitle(sessionId, dto.content, adapter, config).catch((err) =>
+        this.logger.warn(`生成标题失败: ${err.message}`),
       );
     }
     this.checkAndCompress(userId, sessionId, adapter, config).catch((err) =>
@@ -476,9 +483,7 @@ export class ChatService {
 
     const adapter = this.adapters.get(aiConfig.provider);
     if (!adapter) {
-      throw new BadRequestException(
-        `不支持的 AI 服务商: ${aiConfig.provider}`,
-      );
+      throw new BadRequestException(`不支持的 AI 服务商: ${aiConfig.provider}`);
     }
 
     return { adapter, config: aiConfig };
@@ -493,7 +498,9 @@ export class ChatService {
     sessionId: number,
     preloadedSession?: any,
   ): Promise<ChatMessage[]> {
-    const session = preloadedSession || await this.sessionService.getSession(userId, sessionId);
+    const session =
+      preloadedSession ||
+      (await this.sessionService.getSession(userId, sessionId));
 
     // 并行: 构建 system prompt + 获取上下文消息
     const [systemPrompt, dbMessages] = await Promise.all([
@@ -501,9 +508,7 @@ export class ChatService {
       this.sessionService.getContextMessages(sessionId, session.summaryUpTo),
     ]);
 
-    const messages: ChatMessage[] = [
-      { role: 'system', content: systemPrompt },
-    ];
+    const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt }];
 
     // 如果有摘要，作为 system 消息附加
     if (session.summary) {
@@ -564,7 +569,8 @@ export class ChatService {
       const systemMessages = messages.filter((m) => m.role === 'system');
       const nonSystemMessages = messages.filter((m) => m.role !== 'system');
       const trimmed = nonSystemMessages.slice(
-        nonSystemMessages.length - (MAX_CONTEXT_MESSAGES - systemMessages.length),
+        nonSystemMessages.length -
+          (MAX_CONTEXT_MESSAGES - systemMessages.length),
       );
       messages.length = 0;
       messages.push(...systemMessages, ...trimmed);
@@ -587,10 +593,12 @@ export class ChatService {
       .map((c) => c.name);
 
     const today = new Date();
-    const dayOfWeek = ['日', '一', '二', '三', '四', '五', '六'][today.getDay()];
+    const dayOfWeek = ['日', '一', '二', '三', '四', '五', '六'][
+      today.getDay()
+    ];
     const dateStr = today.toISOString().split('T')[0];
 
-    return `你是一个智能助手，可以帮助用户记账、查询账单、统计分析，也可以进行日常闲聊和回答问题。
+    return `你是一个智能助手，主要帮助农资店老板记录农民赊账、客户回款、查询账目和统计分析，也可以进行日常闲聊和回答问题。
 
 ## 当前信息
 - 今天是 ${dateStr}（星期${dayOfWeek}）
@@ -600,11 +608,11 @@ export class ChatService {
 - 收入分类: ${incomeCategories.join('、')}
 
 ## 工具使用规则
-1. 当用户提到了消费或收入，且信息足够完整（至少有金额），调用 create_bills 工具
-2. 如果用户表达了记账意图但信息不完整（缺少金额等关键信息），请友好地追问
-3. 当用户想查看账单记录时，调用 query_bills 工具
+1. 当用户提到了赊账、回款或收入支出，且信息足够完整（至少有金额），调用 create_bills 工具
+2. 如果用户表达了记账意图但信息不完整（缺少金额、客户、品类等关键信息），请友好地追问
+3. 当用户想查看账目记录、客户往来或某段时间内的账单时，调用 query_bills 工具
 4. 当用户要求删除账单时，调用 delete_bills 工具（需要先通过 query_bills 获取账单 ID）
-5. 当用户询问统计、消费分析、预算等问题时，调用 get_statistics 工具
+5. 当用户询问统计、赊账分析、回款分析等问题时，调用 get_statistics 工具
 6. 日常闲聊和普通问答时，直接回复，不要调用任何工具
 
 ## 注意事项

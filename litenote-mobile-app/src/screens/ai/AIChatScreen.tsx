@@ -1708,15 +1708,16 @@ export default function AIChatScreen() {
 
   const getCategoryIcon = (categoryName: string): string => {
     const iconMap: Record<string, string> = {
-      餐饮: '🍽️',
-      交通: '🚗',
-      购物: '🛍️',
-      居住: '🏠',
-      娱乐: '🎮',
-      医疗: '💊',
-      教育: '📚',
-      工资: '💵',
-      理财: '📈',
+      种子: '🌾',
+      化肥: '🧪',
+      农药: '🛡️',
+      农机: '🚜',
+      农具: '🔧',
+      运输: '🚚',
+      其他农资: '📦',
+      客户回款: '💵',
+      现金收款: '💰',
+      其他收入: '📈',
       其他: '📦',
     };
     return iconMap[categoryName] || '📦';

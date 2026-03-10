@@ -24,13 +24,13 @@ import { spacing, borderRadius, borderWidth, shadow } from '../../theme';
 
 // 固定分类列表
 const FIXED_CATEGORIES = [
-  { icon: '🍽️', name: '餐饮' },
-  { icon: '🚗', name: '交通' },
-  { icon: '🛍️', name: '购物' },
-  { icon: '🏠', name: '居住' },
-  { icon: '🎮', name: '娱乐' },
-  { icon: '💊', name: '医疗' },
-  { icon: '📚', name: '教育' },
+  { icon: '🌾', name: '种子' },
+  { icon: '🧪', name: '化肥' },
+  { icon: '🛡️', name: '农药' },
+  { icon: '🚜', name: '农机' },
+  { icon: '🔧', name: '农具' },
+  { icon: '🚚', name: '运输' },
+  { icon: '📦', name: '其他农资' },
 ];
 
 interface CreateBillScreenProps {

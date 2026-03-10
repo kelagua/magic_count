@@ -322,14 +322,14 @@ export default function DashboardScreen() {
   // 分类图标
   const getCategoryIcon = (categoryName?: string): string => {
     const iconMap: { [key: string]: string } = {
-      '餐饮': '☕',
-      '交通': '🚗',
-      '购物': '🛍️',
-      '收入': '💰',
-      '工资': '💼',
-      '娱乐': '🎮',
-      '医疗': '🏥',
-      '教育': '📚',
+      '种子': '🌾',
+      '化肥': '🧪',
+      '农药': '🛡️',
+      '农机': '🚜',
+      '农具': '🔧',
+      '运输': '🚚',
+      '客户回款': '💰',
+      '现金收款': '💵',
     };
     return iconMap[categoryName || ''] || '📝';
   };
@@ -337,14 +337,14 @@ export default function DashboardScreen() {
   // Neo-Brutalism 分类色块 - 饱和糖果色
   const getCategoryBlockColor = (categoryName?: string): string => {
     const colorMap: { [key: string]: string } = {
-      '餐饮': '#FACC15',    // 明黄
-      '交通': '#3B82F6',    // 蓝
-      '购物': '#EC4899',    // 粉
-      '收入': '#22C55E',    // 绿
-      '工资': '#22C55E',    // 绿
-      '娱乐': '#A855F7',    // 紫
-      '医疗': '#EF4444',    // 红
-      '教育': '#F97316',    // 橙
+      '种子': '#FACC15',
+      '化肥': '#3B82F6',
+      '农药': '#EC4899',
+      '农机': '#A855F7',
+      '农具': '#EF4444',
+      '运输': '#F97316',
+      '客户回款': '#22C55E',
+      '现金收款': '#16A34A',
     };
     return colorMap[categoryName || ''] || '#E5E5E5';
   };
