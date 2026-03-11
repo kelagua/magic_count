@@ -16,9 +16,9 @@ import YearlyView from './YearlyView';
 type SubTab = 'daily' | 'monthly' | 'yearly';
 
 const SUB_TAB_OPTIONS = [
-  { key: 'daily', label: '日收支' },
-  { key: 'monthly', label: '月收支' },
-  { key: 'yearly', label: '年收支' },
+  { key: 'daily', label: '日交易' },
+  { key: 'monthly', label: '月交易' },
+  { key: 'yearly', label: '年交易' },
 ];
 
 export default function IncomeExpenseTab() {

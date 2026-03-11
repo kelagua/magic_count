@@ -61,17 +61,17 @@ export interface AIAdapter {
 /**
  * 账单解析的系统提示词
  */
-export const BILL_PARSE_PROMPT = `你是一个专业的记账助手。请从以下内容中提取所有的消费或收入记录。
+export const BILL_PARSE_PROMPT = `你是一个专业的农资赊账记账助手。请从以下内容中提取所有的赊账、回款或收入记录。
 
 对于每条记录，请提取：
 - amount: 金额（数字，保留小数）
 - type: 类型（expense=支出, income=收入）
-- categoryName: 分类（餐饮/交通/购物/居住/娱乐/医疗/教育/工资/理财/其他）
+- categoryName: 分类（种子/化肥/农药/农机/农具/运输/其他农资/客户回款/现金收款/其他收款/其他）
 - description: 简短描述（10字以内）
 - date: 日期（YYYY-MM-DD 格式，如无法确定则使用今天日期）
 
 请以 JSON 数组格式返回，例如：
-[{"amount": 25.6, "type": "expense", "categoryName": "餐饮", "description": "星巴克咖啡", "date": "2026-01-25"}]
+[{"amount": 1200, "type": "expense", "categoryName": "化肥", "description": "张三化肥赊账", "date": "2026-01-25"}]
 
 注意：
 1. 如果无法识别任何账单信息，返回空数组 []

@@ -27,7 +27,7 @@ export class ParseBillDto {
 
   @ApiProperty({
     description: '输入内容（Base64 图片或文字内容）',
-    example: '今天买了一杯星巴克咖啡 25.6 元',
+    example: '今天给张三赊了两袋化肥 1200 元',
   })
   @IsString()
   @IsNotEmpty({ message: '内容不能为空' })
@@ -56,10 +56,10 @@ export class ParsedBillDto {
   })
   type: 'income' | 'expense';
 
-  @ApiProperty({ description: '分类名称', example: '餐饮' })
+  @ApiProperty({ description: '分类名称', example: '化肥' })
   categoryName: string;
 
-  @ApiProperty({ description: '描述', example: '星巴克咖啡' })
+  @ApiProperty({ description: '描述', example: '张三化肥赊账' })
   description: string;
 
   @ApiProperty({ description: '日期', example: '2026-01-25' })

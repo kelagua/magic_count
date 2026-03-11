@@ -131,8 +131,8 @@ export default function AssetCompositionChart({
 }: AssetCompositionChartProps) {
   return (
     <View>
-      <CategoryPie title="近12月支出类型构成" data={expenseCategoryStats} dateRange={dateRange} />
-      <CategoryPie title="近12月收入类型构成" data={incomeCategoryStats} dateRange={dateRange} />
+      <CategoryPie title="近12月赊账类型构成" data={expenseCategoryStats} dateRange={dateRange} />
+      <CategoryPie title="近12月回款类型构成" data={incomeCategoryStats} dateRange={dateRange} />
     </View>
   );
 }

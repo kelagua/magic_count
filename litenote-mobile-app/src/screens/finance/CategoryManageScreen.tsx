@@ -103,7 +103,7 @@ const CategoryManageScreen: React.FC = () => {
           onPress={() => setSelectedType('expense')}
         >
           <Text style={[styles.tabText, selectedType === 'expense' && styles.tabTextActive]}>
-            支出分类
+            赊账分类
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -111,7 +111,7 @@ const CategoryManageScreen: React.FC = () => {
           onPress={() => setSelectedType('income')}
         >
           <Text style={[styles.tabText, selectedType === 'income' && styles.tabTextActive]}>
-            收入分类
+            回款分类
           </Text>
         </TouchableOpacity>
       </View>

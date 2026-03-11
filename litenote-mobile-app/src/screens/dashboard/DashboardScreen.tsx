@@ -3,7 +3,7 @@
  * 粗线框、饱和糖果色块、粗描边、平移阴影
  * 像彩色积木构成的界面
  */
-import React, { useCallback, useRef, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,181 +12,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
-  PanResponder,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
 import { ThemeColors } from '../../theme/colors';
 import { borderRadius, borderWidth, spacing, shadow } from '../../theme/spacing';
-import { ProgressBar, BrutalPressable } from '../../components/ui';
+import { BrutalPressable } from '../../components/ui';
 import { DashboardSkeleton } from '../../components/skeleton';
 import { useDashboard, useStyles } from '../../hooks';
-import { budgetsService } from '../../services/api/budgets';
-import { financialGoalsService } from '../../services/api/financial-goals';
-import { QUERY_KEYS } from '../../lib/queryClient';
 import type { BillData } from '../../types/bill';
-import type { BudgetProgress } from '../../types/budget';
-import type { FinancialGoalProgress } from '../../types/financial-goal';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SWIPE_THRESHOLD = 80;
-const SWIPE_VELOCITY = 0.3;
-
-/** 统一的进度卡片数据 */
-interface ProgressCardItem {
-  id: string;
-  type: 'budget' | 'goal';
-  title: string;
-  icon: string;
-  progress: number;
-  currentAmount: number;
-  totalAmount: number;
-  color: string;
-  labelLeft: string;
-  labelRight: string;
-}
-
-/**
- * 可滑动丢弃的卡片堆叠组件
- * 跟随手指方向甩出，露出下方卡片
- */
-function SwipeableCardStack({
-  cards,
-  styles,
-  colors,
-}: {
-  cards: ProgressCardItem[];
-  styles: any;
-  colors: ThemeColors;
-}) {
-  const [topIndex, setTopIndex] = useState(0);
-  const pan = useRef(new Animated.ValueXY()).current;
-
-  // 当 cards 变化时重置
-  useEffect(() => {
-    setTopIndex(0);
-    pan.setValue({ x: 0, y: 0 });
-  }, [cards.length]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, g) =>
-        Math.abs(g.dx) > 5 || Math.abs(g.dy) > 5,
-      onPanResponderMove: Animated.event(
-        [null, { dx: pan.x, dy: pan.y }],
-        { useNativeDriver: false },
-      ),
-      onPanResponderRelease: (_, g) => {
-        const dist = Math.sqrt(g.dx * g.dx + g.dy * g.dy);
-        const vel = Math.sqrt(g.vx * g.vx + g.vy * g.vy);
-        const shouldDismiss = dist > SWIPE_THRESHOLD || vel > SWIPE_VELOCITY;
-
-        if (shouldDismiss && cards.length > 1) {
-          // 沿滑动方向飞出（放大到屏幕外）
-          const scale = SCREEN_WIDTH * 1.5 / Math.max(dist, 1);
-          const toX = g.dx * scale;
-          const toY = g.dy * scale;
-          Animated.timing(pan, {
-            toValue: { x: toX, y: toY },
-            duration: 280,
-            useNativeDriver: true,
-          }).start(() => {
-            setTopIndex((prev) => (prev + 1) % cards.length);
-            pan.setValue({ x: 0, y: 0 });
-          });
-        } else {
-          // 弹回原位
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            friction: 6,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    }),
-  ).current;
-
-  if (cards.length === 0) {return null;}
-
-  const topRotate = pan.x.interpolate({
-    inputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-    outputRange: ['-12deg', '0deg', '12deg'],
-  });
-
-  // 只渲染最多 3 张（从底到顶）
-  const visibleCount = Math.min(cards.length, 3);
-  const rendered = [];
-
-  for (let i = visibleCount - 1; i >= 0; i--) {
-    const cardIndex = (topIndex + i) % cards.length;
-    const card = cards[cardIndex];
-    const isTop = i === 0;
-
-    const cardStyle: any = {
-      position: i === 0 && cards.length === 1 ? 'relative' : 'absolute',
-      left: 0,
-      right: 0,
-      top: i * 6,
-      zIndex: visibleCount - i,
-      opacity: i === 2 ? 0.4 : i === 1 ? 0.7 : 1,
-      transform: isTop
-        ? [{ translateX: pan.x }, { translateY: pan.y }, { rotate: topRotate }]
-        : [{ scale: 1 - i * 0.03 }],
-    };
-
-    rendered.push(
-      <Animated.View
-        key={card.id + '-' + cardIndex}
-        style={[styles.progressCard, cardStyle]}
-        {...(isTop ? panResponder.panHandlers : {})}
-      >
-        <View style={styles.progressCardHeader}>
-          <View style={styles.budgetTitleRow}>
-            <Text style={styles.sectionSticker}>{card.icon}</Text>
-            <View>
-              <Text style={styles.progressCardTitle}>{card.title}</Text>
-              <Text style={styles.progressCardType}>
-                {card.type === 'budget' ? '预算' : '目标'}
-              </Text>
-            </View>
-          </View>
-          <View style={[
-            styles.budgetPercentBadge,
-            card.progress >= 100 && card.type === 'goal'
-              ? { backgroundColor: colors.success }
-              : undefined,
-          ]}>
-            <Text style={[
-              styles.budgetPercentText,
-              card.progress >= 100 && card.type === 'goal'
-                ? { color: '#FFFFFF' }
-                : undefined,
-            ]}>
-              {Math.round(card.progress)}%
-            </Text>
-          </View>
-        </View>
-        <View style={styles.progressBarContainer}>
-          <ProgressBar
-            progress={card.progress}
-            color={card.color}
-            backgroundColor={colors.divider}
-            height={16}
-            style={styles.budgetProgressBar}
-          />
-        </View>
-        <View style={styles.budgetLabels}>
-          <Text style={styles.budgetLabel}>{card.labelLeft}</Text>
-          <Text style={styles.budgetLabel}>{card.labelRight}</Text>
-        </View>
-      </Animated.View>,
-    );
-  }
-
-  return rendered;
-}
 
 /**
  * 列表项入场动画 - 交错滑入 + 淡入
@@ -234,70 +67,13 @@ export default function DashboardScreen() {
     refetch,
   } = useDashboard();
 
-  // 预算进度查询
-  const { data: budgetProgressData, refetch: refetchBudgets } = useQuery({
-    queryKey: QUERY_KEYS.budgetProgress,
-    queryFn: async () => {
-      const res = await budgetsService.getProgress();
-      return Array.isArray(res) ? res : (res.data ?? []);
-    },
-  });
-
-  // 财务目标进度查询
-  const { data: goalProgressData, refetch: refetchGoals } = useQuery({
-    queryKey: QUERY_KEYS.financialGoals,
-    queryFn: async () => {
-      const res = await financialGoalsService.getProgress();
-      return Array.isArray(res) ? res : (res.data ?? []);
-    },
-  });
-
-  // 合并为统一的卡片数据（预算优先，财务目标补充）
-  const progressCards: ProgressCardItem[] = useMemo(() => {
-    const cards: ProgressCardItem[] = [];
-
-    // 预算卡片（实时数据，优先展示）
-    (budgetProgressData ?? []).forEach((b: BudgetProgress) => {
-      cards.push({
-        id: `budget-${b.id}`,
-        type: 'budget',
-        title: b.name,
-        icon: '📊',
-        progress: b.progress,
-        currentAmount: b.spent,
-        totalAmount: Number(b.amount),
-        color: styles._colors.primary,
-        labelLeft: `已用 ¥${b.spent.toLocaleString()}`,
-        labelRight: `剩余 ¥${Math.max(0, b.remaining).toLocaleString()}`,
-      });
-    });
-
-    // 财务目标卡片（手动维护，作为补充）
-    (goalProgressData ?? []).filter((g: FinancialGoalProgress) => !g.isCompleted).forEach((g: FinancialGoalProgress) => {
-      cards.push({
-        id: `goal-${g.id}`,
-        type: 'goal',
-        title: g.name,
-        icon: g.icon || '🎯',
-        progress: g.progress,
-        currentAmount: g.currentAmount,
-        totalAmount: g.targetAmount,
-        color: g.color || styles._colors.success,
-        labelLeft: `已存 ¥${g.currentAmount.toLocaleString()}`,
-        labelRight: `目标 ¥${g.targetAmount.toLocaleString()}`,
-      });
-    });
-
-    return cards;
-  }, [budgetProgressData, goalProgressData, styles._colors]);
-
   const currentDate = new Date();
   const monthName = `${currentDate.getMonth() + 1}月账本`;
   const yearName = `${currentDate.getFullYear()}`;
 
   const onRefresh = useCallback(async () => {
-    await Promise.all([refetch(), refetchBudgets(), refetchGoals()]);
-  }, [refetch, refetchBudgets, refetchGoals]);
+    await refetch();
+  }, [refetch]);
 
   const handleAddBill = () => {
     navigation.navigate('CreateBill' as never);
@@ -322,14 +98,14 @@ export default function DashboardScreen() {
   // 分类图标
   const getCategoryIcon = (categoryName?: string): string => {
     const iconMap: { [key: string]: string } = {
-      '餐饮': '☕',
-      '交通': '🚗',
-      '购物': '🛍️',
-      '收入': '💰',
-      '工资': '💼',
-      '娱乐': '🎮',
-      '医疗': '🏥',
-      '教育': '📚',
+      '种子': '🌾',
+      '化肥': '🧪',
+      '农药': '🛡️',
+      '农机': '🚜',
+      '农具': '🔧',
+      '运输': '🚚',
+      '客户回款': '💰',
+      '现金收款': '💵',
     };
     return iconMap[categoryName || ''] || '📝';
   };
@@ -337,14 +113,14 @@ export default function DashboardScreen() {
   // Neo-Brutalism 分类色块 - 饱和糖果色
   const getCategoryBlockColor = (categoryName?: string): string => {
     const colorMap: { [key: string]: string } = {
-      '餐饮': '#FACC15',    // 明黄
-      '交通': '#3B82F6',    // 蓝
-      '购物': '#EC4899',    // 粉
-      '收入': '#22C55E',    // 绿
-      '工资': '#22C55E',    // 绿
-      '娱乐': '#A855F7',    // 紫
-      '医疗': '#EF4444',    // 红
-      '教育': '#F97316',    // 橙
+      '种子': '#FACC15',
+      '化肥': '#3B82F6',
+      '农药': '#EC4899',
+      '农机': '#A855F7',
+      '农具': '#EF4444',
+      '运输': '#F97316',
+      '客户回款': '#22C55E',
+      '现金收款': '#16A34A',
     };
     return colorMap[categoryName || ''] || '#E5E5E5';
   };
@@ -380,7 +156,7 @@ export default function DashboardScreen() {
           <Text style={styles.stickerText}>⚡</Text>
         </View>
         <View style={styles.overviewContent}>
-          <Text style={styles.overviewLabel}>本月结余</Text>
+          <Text style={styles.overviewLabel}>本月往来差额</Text>
           <Text style={styles.overviewBalance}>¥ {monthBalance.toFixed(2)}</Text>
 
           <View style={styles.overviewDivider} />
@@ -391,7 +167,7 @@ export default function DashboardScreen() {
                 <Text style={styles.statIcon}>↘</Text>
               </View>
               <View>
-                <Text style={styles.statLabel}>总支出</Text>
+                <Text style={styles.statLabel}>本月赊账</Text>
                 <Text style={styles.statValue}>¥ {monthExpense.toFixed(2)}</Text>
               </View>
             </TouchableOpacity>
@@ -400,7 +176,7 @@ export default function DashboardScreen() {
                 <Text style={styles.statIcon}>↗</Text>
               </View>
               <View>
-                <Text style={styles.statLabel}>总收入</Text>
+                <Text style={styles.statLabel}>本月回款</Text>
                 <Text style={styles.statValue}>¥ {monthIncome.toFixed(2)}</Text>
               </View>
             </TouchableOpacity>
@@ -408,33 +184,12 @@ export default function DashboardScreen() {
         </View>
       </TouchableOpacity>
 
-      {/* ========== Progress Cards - 预算 & 财务目标 ========== */}
-      {progressCards.length > 0 ? (
-        <View style={[styles.carouselWrapper, { minHeight: 160 }]}>
-          <SwipeableCardStack
-            cards={progressCards}
-            styles={styles}
-            colors={styles._colors}
-          />
-        </View>
-      ) : (
-        <TouchableOpacity
-          style={styles.progressEmptyCard}
-          onPress={() => navigation.navigate('FinancialGoals' as never)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.progressEmptyIcon}>📊</Text>
-          <Text style={styles.progressEmptyText}>设置预算或财务目标来追踪进度</Text>
-          <Text style={styles.progressEmptyHint}>点击前往设置 →</Text>
-        </TouchableOpacity>
-      )}
-
       {/* ========== Recent Transactions ========== */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
             <Text style={styles.sectionSticker}>📋</Text>
-            <Text style={styles.sectionTitle}>近期交易</Text>
+            <Text style={styles.sectionTitle}>近期账目</Text>
           </View>
           <BrutalPressable
             onPress={handleViewAllBills}
@@ -492,9 +247,9 @@ export default function DashboardScreen() {
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📝</Text>
-            <Text style={styles.emptyText}>暂无交易记录</Text>
+            <Text style={styles.emptyText}>暂无账目记录</Text>
             <TouchableOpacity style={styles.emptyButton} onPress={handleAddBill}>
-              <Text style={styles.emptyButtonText}>添加第一笔</Text>
+              <Text style={styles.emptyButtonText}>记录第一笔</Text>
             </TouchableOpacity>
           </View>
         )}

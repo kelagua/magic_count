@@ -32,20 +32,20 @@ export default function AssetsTab() {
     >
       {/* 总资产卡片 */}
       <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>净资产（收入 - 支出）</Text>
+        <Text style={styles.balanceLabel}>往来差额（回款 - 赊账）</Text>
         <Text style={styles.balanceAmount}>
           {formatCurrency(netWorth)}
         </Text>
         <View style={styles.balanceRow}>
           <View style={styles.balanceItem}>
-            <Text style={styles.balanceItemLabel}>总收入</Text>
+            <Text style={styles.balanceItemLabel}>总回款</Text>
             <Text style={[styles.balanceItemValue, { color: '#4ADE80' }]}>
               {formatCurrency(totalIncome)}
             </Text>
           </View>
           <View style={styles.balanceDivider} />
           <View style={styles.balanceItem}>
-            <Text style={styles.balanceItemLabel}>总支出</Text>
+            <Text style={styles.balanceItemLabel}>总赊账</Text>
             <Text style={[styles.balanceItemValue, { color: '#F87171' }]}>
               {formatCurrency(totalExpense)}
             </Text>

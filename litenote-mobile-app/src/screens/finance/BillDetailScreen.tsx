@@ -110,7 +110,7 @@ export default function BillDetailScreen() {
   }
 
   const isExpense = bill.type === 'expense';
-  const typeLabel = isExpense ? '支出' : '收入';
+  const typeLabel = isExpense ? '赊账' : '回款';
   const amountColor = isExpense ? styles._colors.expense : styles._colors.income;
 
   return (

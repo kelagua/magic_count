@@ -24,13 +24,13 @@ import { spacing, borderRadius, borderWidth, shadow } from '../../theme';
 
 // 固定分类列表
 const FIXED_CATEGORIES = [
-  { icon: '🍽️', name: '餐饮' },
-  { icon: '🚗', name: '交通' },
-  { icon: '🛍️', name: '购物' },
-  { icon: '🏠', name: '居住' },
-  { icon: '🎮', name: '娱乐' },
-  { icon: '💊', name: '医疗' },
-  { icon: '📚', name: '教育' },
+  { icon: '🌾', name: '种子' },
+  { icon: '🧪', name: '化肥' },
+  { icon: '🛡️', name: '农药' },
+  { icon: '🚜', name: '农机' },
+  { icon: '🔧', name: '农具' },
+  { icon: '🚚', name: '运输' },
+  { icon: '📦', name: '其他农资' },
 ];
 
 interface CreateBillScreenProps {
@@ -201,14 +201,14 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* 支出/收入切换 */}
+          {/* 赊账/回款切换 */}
           <View style={styles.typeSelector}>
             <TouchableOpacity
               style={[styles.typeButton, type === 'expense' && styles.typeButtonExpenseActive]}
               onPress={() => handleTypeChange('expense')}
             >
               <Text style={[styles.typeButtonText, type === 'expense' && styles.typeButtonTextActive]}>
-                支出
+                赊账
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -216,7 +216,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
               onPress={() => handleTypeChange('income')}
             >
               <Text style={[styles.typeButtonText, type === 'income' && styles.typeButtonTextActive]}>
-                收入
+                回款
               </Text>
             </TouchableOpacity>
           </View>

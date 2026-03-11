@@ -29,18 +29,88 @@ export class PrismaService
       if (existingDefaultCategories === 0) {
         const defaultCategories = [
           // 收入分类
-          { name: '工资', type: 'income', icon: '💰', color: '#4CAF50', isDefault: true, sortOrder: 1 },
-          { name: '奖金', type: 'income', icon: '🎁', color: '#8BC34A', isDefault: true, sortOrder: 2 },
-          { name: '投资', type: 'income', icon: '📈', color: '#009688', isDefault: true, sortOrder: 3 },
+          {
+            name: '客户回款',
+            type: 'income',
+            icon: '💰',
+            color: '#4CAF50',
+            isDefault: true,
+            sortOrder: 1,
+          },
+          {
+            name: '现金收款',
+            type: 'income',
+            icon: '💵',
+            color: '#8BC34A',
+            isDefault: true,
+            sortOrder: 2,
+          },
+          {
+            name: '其他收款',
+            type: 'income',
+            icon: '📈',
+            color: '#009688',
+            isDefault: true,
+            sortOrder: 3,
+          },
 
           // 支出分类（7个固定分类）
-          { name: '餐饮', type: 'expense', icon: '🍽️', color: '#FF5722', isDefault: true, sortOrder: 1 },
-          { name: '交通', type: 'expense', icon: '🚗', color: '#FF9800', isDefault: true, sortOrder: 2 },
-          { name: '购物', type: 'expense', icon: '🛍️', color: '#E91E63', isDefault: true, sortOrder: 3 },
-          { name: '居住', type: 'expense', icon: '🏠', color: '#795548', isDefault: true, sortOrder: 4 },
-          { name: '娱乐', type: 'expense', icon: '🎮', color: '#9C27B0', isDefault: true, sortOrder: 5 },
-          { name: '医疗', type: 'expense', icon: '💊', color: '#F44336', isDefault: true, sortOrder: 6 },
-          { name: '教育', type: 'expense', icon: '📚', color: '#3F51B5', isDefault: true, sortOrder: 7 },
+          {
+            name: '种子',
+            type: 'expense',
+            icon: '🌾',
+            color: '#FFB703',
+            isDefault: true,
+            sortOrder: 1,
+          },
+          {
+            name: '化肥',
+            type: 'expense',
+            icon: '🧪',
+            color: '#219EBC',
+            isDefault: true,
+            sortOrder: 2,
+          },
+          {
+            name: '农药',
+            type: 'expense',
+            icon: '🛡️',
+            color: '#FB8500',
+            isDefault: true,
+            sortOrder: 3,
+          },
+          {
+            name: '农机',
+            type: 'expense',
+            icon: '🚜',
+            color: '#8E44AD',
+            isDefault: true,
+            sortOrder: 4,
+          },
+          {
+            name: '农具',
+            type: 'expense',
+            icon: '🔧',
+            color: '#E63946',
+            isDefault: true,
+            sortOrder: 5,
+          },
+          {
+            name: '运输',
+            type: 'expense',
+            icon: '🚚',
+            color: '#3F51B5',
+            isDefault: true,
+            sortOrder: 6,
+          },
+          {
+            name: '其他农资',
+            type: 'expense',
+            icon: '📦',
+            color: '#795548',
+            isDefault: true,
+            sortOrder: 7,
+          },
         ];
 
         await this.category.createMany({
