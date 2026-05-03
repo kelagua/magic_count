@@ -12,8 +12,7 @@ export class CategoriesService {
   async create(userId: string, createCategoryDto: CreateCategoryDto) {
     const { name, type, icon, color, sortOrder } = createCategoryDto;
 
-    // 确保用户存在，如果不存在则创建
-    await this.ensureUserExists(userId);
+    // JWT guard 已确保用户通过认证，无需自动创建用户
 
     return this.prisma.category.create({
       data: {
@@ -28,27 +27,7 @@ export class CategoriesService {
     });
   }
 
-  /**
-   * 确保用户存在，如果不存在则创建测试用户
-   */
-  private async ensureUserExists(userId: string) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!existingUser) {
-      await this.prisma.user.create({
-        data: {
-          id: userId,
-          username: 'testuser',
-          password:
-            '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', // 123456
-          email: 'test@example.com',
-          nickname: '测试用户',
-        },
-      });
-    }
-  }
+  // ensureUserExists 已移除 — JWT guard 确保用户已通过认证，不再自动创建硬编码用户
 
   /**
    * 获取用户的分类列表（包括系统默认分类）

@@ -6,6 +6,12 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  // 强制校验关键环境变量
+  if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is required');
+    process.exit(1);
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // 提升请求体大小限制（图片 base64 编码较大）

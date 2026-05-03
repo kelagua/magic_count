@@ -27,8 +27,13 @@ export class BillsService {
   async create(userId: string, createBillDto: CreateBillWithUserDto) {
     const { amount, type, description, date, categoryId, customerId } = createBillDto;
 
-    // 确保用户存在，如果不存在则创建
-    await this.ensureUserExists(userId);
+    // 验证用户存在（JWT guard 已确保认证，此处仅做数据完整性校验）
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!existingUser) {
+      throw new BadRequestException('用户不存在');
+    }
 
     // 赊账类型必须关联客户
     if (type === 'credit' && !customerId) {
@@ -52,26 +57,7 @@ export class BillsService {
     });
   }
 
-  /**
-   * 确保用户存在，如果不存在则创建测试用户
-   */
-  private async ensureUserExists(userId: string) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!existingUser) {
-      await this.prisma.user.create({
-        data: {
-          id: userId,
-          username: 'testuser',
-          password: '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiXe/QLSUG6xNekdHgTGmrpHEfIoxm', // 123456
-          email: 'test@example.com',
-          nickname: '测试用户',
-        },
-      });
-    }
-  }
+  // ensureUserExists 已移除 — JWT guard 确保用户已通过认证，不再自动创建硬编码用户
 
   /**
    * 获取用户的账单列表
@@ -486,63 +472,66 @@ export class BillsService {
     const settledBatchId = uuidv4().substring(0, 8);
     const now = new Date();
 
-    // 验证所有账单都属于该用户且是赊账类型
-    const bills = await this.prisma.bill.findMany({
-      where: {
-        id: { in: billIds },
-        userId,
-        type: 'credit',
-        isSettled: false,
-      },
-    });
+    // 使用事务确保原子性：要么全部结算成功，要么全部回滚
+    return this.prisma.$transaction(async (tx) => {
+      // 验证所有账单都属于该用户且是赊账类型（在事务内查询，防止并发修改）
+      const bills = await tx.bill.findMany({
+        where: {
+          id: { in: billIds },
+          userId,
+          type: 'credit',
+          isSettled: false,
+        },
+      });
 
-    if (bills.length === 0) {
-      throw new BadRequestException('没有可结算的赊账记录');
-    }
+      if (bills.length === 0) {
+        throw new BadRequestException('没有可结算的赊账记录');
+      }
 
-    if (bills.length !== billIds.length) {
-      const foundIds = bills.map((b) => b.id);
-      const invalidIds = billIds.filter((id) => !foundIds.includes(id));
-      this.logger.warn(
-        `部分账单不可结算: ${invalidIds.join(', ')}（可能不存在、非赊账类型或已结算）`,
+      if (bills.length !== billIds.length) {
+        const foundIds = bills.map((b) => b.id);
+        const invalidIds = billIds.filter((id) => !foundIds.includes(id));
+        this.logger.warn(
+          `部分账单不可结算: ${invalidIds.join(', ')}（可能不存在、非赊账类型或已结算）`,
+        );
+      }
+
+      // 批量更新（事务内）
+      const settledBillIds = bills.map((b) => b.id);
+      await tx.bill.updateMany({
+        where: {
+          id: { in: settledBillIds },
+        },
+        data: {
+          isSettled: true,
+          settledAt: now,
+          settledBatchId,
+        },
+      });
+
+      // 返回结算后的账单详情
+      const settledBills = await tx.bill.findMany({
+        where: { id: { in: settledBillIds } },
+        include: {
+          category: true,
+          customer: true,
+        },
+      });
+
+      const totalAmount = settledBills.reduce(
+        (sum, bill) => sum + bill.amount.toNumber(),
+        0,
       );
-    }
 
-    // 批量更新
-    const settledBillIds = bills.map((b) => b.id);
-    await this.prisma.bill.updateMany({
-      where: {
-        id: { in: settledBillIds },
-      },
-      data: {
-        isSettled: true,
-        settledAt: now,
+      return {
         settledBatchId,
-      },
+        settledAt: now,
+        paymentMethod: paymentMethod || null,
+        settledCount: settledBills.length,
+        totalAmount,
+        bills: settledBills,
+      };
     });
-
-    // 返回结算后的账单详情
-    const settledBills = await this.prisma.bill.findMany({
-      where: { id: { in: settledBillIds } },
-      include: {
-        category: true,
-        customer: true,
-      },
-    });
-
-    const totalAmount = settledBills.reduce(
-      (sum, bill) => sum + bill.amount.toNumber(),
-      0,
-    );
-
-    return {
-      settledBatchId,
-      settledAt: now,
-      paymentMethod: paymentMethod || null,
-      settledCount: settledBills.length,
-      totalAmount,
-      bills: settledBills,
-    };
   }
 
   /**
