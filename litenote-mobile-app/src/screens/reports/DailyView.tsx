@@ -11,7 +11,7 @@ import { useStyles } from '../../hooks';
 import { useDailyGridData, useDailyBills } from '../../hooks/useIncomeExpenseData';
 import { CalendarGrid, PeriodNavigator } from '../../components/reports';
 import BillItem from '../../components/business/BillItem';
-import type { BillData as BillItemData } from '../../components/business/BillItem';
+import type { BillItemData } from '../../components/business/BillItem';
 
 interface DailyViewProps {
   initialYear?: number;

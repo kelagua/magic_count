@@ -30,4 +30,5 @@ export { default as Alert } from './ui/Alert';
 export type { ToastType, AlertButton } from './ui';
 
 // 业务组件
-export { default as BillItem, type BillData } from './business/BillItem';
+export { default as BillItem } from './business/BillItem';
+export type { BillItemData } from './business/BillItem';

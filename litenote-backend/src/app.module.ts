@@ -12,6 +12,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { BudgetsModule } from './budgets/budgets.module';
 import { FinancialGoalsModule } from './financial-goals/financial-goals.module';
+import { CustomersModule } from './customers/customers.module';
 import { AppVersionModule } from './app-version/app-version.module';
 import { AIModule } from './ai/ai.module';
 
@@ -31,6 +32,7 @@ import { AIModule } from './ai/ai.module';
     AccountsModule,
     BudgetsModule,
     FinancialGoalsModule,
+    CustomersModule,
     AppVersionModule,
     AIModule,
   ],

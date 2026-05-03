@@ -16,7 +16,7 @@ export function useCategories(type: BillType, enabled: boolean = true) {
   const query = useQuery({
     queryKey: QUERY_KEYS.categories.byType(type),
     queryFn: async () => {
-      const response = await categoriesService.getCategories(type);
+      const response = await categoriesService.getCategories(type as 'income' | 'expense' | 'credit');
       if (response.success && response.data) {
         return response.data;
       }

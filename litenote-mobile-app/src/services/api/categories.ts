@@ -6,7 +6,7 @@ import { httpService } from '../http';
 export interface CategoryData {
   id: number;
   name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   isDefault: boolean;
@@ -18,7 +18,7 @@ export interface CategoryData {
 
 export interface CreateCategoryDto {
   name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   sortOrder?: number;
@@ -26,7 +26,7 @@ export interface CreateCategoryDto {
 
 export interface UpdateCategoryDto {
   name?: string;
-  type?: 'income' | 'expense';
+  type?: 'income' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   sortOrder?: number;
@@ -49,7 +49,7 @@ class CategoriesService {
   /**
    * 获取分类列表
    */
-  async getCategories(type?: 'income' | 'expense'): Promise<ApiResponse<CategoryData[]>> {
+  async getCategories(type?: 'income' | 'expense' | 'credit'): Promise<ApiResponse<CategoryData[]>> {
     const params = type ? { type } : {};
     return httpService.get('/categories', { params });
   }

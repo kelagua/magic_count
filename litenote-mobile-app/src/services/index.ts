@@ -9,6 +9,8 @@ export { categoriesService } from './api/categories';
 export { accountsService } from './api/accounts';
 export { budgetsService } from './api/budgets';
 
+export { customersService } from './api/customers';
+
 // 支付通知服务（仅用于权限管理）
 export { paymentNotificationService } from './paymentNotification';
 export type { PermissionStatus } from './paymentNotification';
@@ -43,3 +45,10 @@ export type {
   BudgetProgress,
   BudgetPeriod
 } from '../types/budget';
+
+export type {
+  CustomerData,
+  CreateCustomerDto,
+  UpdateCustomerDto,
+  CustomerQueryParams
+} from '../types/customer';

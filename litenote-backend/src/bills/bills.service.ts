@@ -9,9 +9,11 @@ import {
   CreateBillWithUserDto,
   UpdateBillDto,
   BillQueryDto,
+  SettleBatchDto,
 } from './dto/bill.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PaginatedResponse } from '../common/interfaces/api-response.interface';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class BillsService {
@@ -23,10 +25,15 @@ export class BillsService {
    * 创建账单
    */
   async create(userId: string, createBillDto: CreateBillWithUserDto) {
-    const { amount, type, description, date, categoryId } = createBillDto;
+    const { amount, type, description, date, categoryId, customerId } = createBillDto;
 
     // 确保用户存在，如果不存在则创建
     await this.ensureUserExists(userId);
+
+    // 赊账类型必须关联客户
+    if (type === 'credit' && !customerId) {
+      throw new BadRequestException('赊账类型必须关联客户');
+    }
 
     return this.prisma.bill.create({
       data: {
@@ -35,10 +42,12 @@ export class BillsService {
         description,
         date: new Date(date),
         categoryId,
+        customerId,
         userId,
       },
       include: {
         category: true,
+        customer: true,
       },
     });
   }
@@ -73,6 +82,8 @@ export class BillsService {
       limit = 20,
       type,
       categoryId,
+      customerId,
+      isSettled,
       startDate,
       endDate,
       orderBy = 'date',
@@ -91,6 +102,14 @@ export class BillsService {
       where.categoryId = categoryId;
     }
 
+    if (customerId) {
+      where.customerId = customerId;
+    }
+
+    if (isSettled !== undefined) {
+      where.isSettled = isSettled;
+    }
+
     if (startDate || endDate) {
       where.date = {};
       if (startDate) {
@@ -106,6 +125,7 @@ export class BillsService {
         where,
         include: {
           category: true,
+          customer: true,
         },
         orderBy: {
           [orderBy]: orderDirection,
@@ -138,6 +158,7 @@ export class BillsService {
       },
       include: {
         category: true,
+        customer: true,
       },
     });
 
@@ -172,12 +193,16 @@ export class BillsService {
     if (updateBillDto.categoryId !== undefined) {
       updateData.categoryId = updateBillDto.categoryId;
     }
+    if (updateBillDto.customerId !== undefined) {
+      updateData.customerId = updateBillDto.customerId;
+    }
 
     return this.prisma.bill.update({
       where: { id },
       data: updateData,
       include: {
         category: true,
+        customer: true,
       },
     });
   }
@@ -451,5 +476,200 @@ export class BillsService {
     this.logger.log(`[getStatistics] 统计完成 - 收入: ${result.totalIncome}, 支出: ${result.totalExpense}, 每日趋势: ${dailyTrends.length}条`);
 
     return result;
+  }
+
+  /**
+   * 批量结算赊账
+   */
+  async settleBatch(userId: string, dto: SettleBatchDto) {
+    const { billIds, paymentMethod } = dto;
+    const settledBatchId = uuidv4().substring(0, 8);
+    const now = new Date();
+
+    // 验证所有账单都属于该用户且是赊账类型
+    const bills = await this.prisma.bill.findMany({
+      where: {
+        id: { in: billIds },
+        userId,
+        type: 'credit',
+        isSettled: false,
+      },
+    });
+
+    if (bills.length === 0) {
+      throw new BadRequestException('没有可结算的赊账记录');
+    }
+
+    if (bills.length !== billIds.length) {
+      const foundIds = bills.map((b) => b.id);
+      const invalidIds = billIds.filter((id) => !foundIds.includes(id));
+      this.logger.warn(
+        `部分账单不可结算: ${invalidIds.join(', ')}（可能不存在、非赊账类型或已结算）`,
+      );
+    }
+
+    // 批量更新
+    const settledBillIds = bills.map((b) => b.id);
+    await this.prisma.bill.updateMany({
+      where: {
+        id: { in: settledBillIds },
+      },
+      data: {
+        isSettled: true,
+        settledAt: now,
+        settledBatchId,
+      },
+    });
+
+    // 返回结算后的账单详情
+    const settledBills = await this.prisma.bill.findMany({
+      where: { id: { in: settledBillIds } },
+      include: {
+        category: true,
+        customer: true,
+      },
+    });
+
+    const totalAmount = settledBills.reduce(
+      (sum, bill) => sum + bill.amount.toNumber(),
+      0,
+    );
+
+    return {
+      settledBatchId,
+      settledAt: now,
+      paymentMethod: paymentMethod || null,
+      settledCount: settledBills.length,
+      totalAmount,
+      bills: settledBills,
+    };
+  }
+
+  /**
+   * 获取首页统计数据
+   */
+  async getHomeStatistics(userId: string) {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // 并行查询各项数据
+    const [
+      unsettledCredits,
+      monthIncome,
+      monthExpense,
+      recentBills,
+      topDebtors,
+    ] = await Promise.all([
+      // 1. 未结算赊账总额
+      this.prisma.bill.aggregate({
+        where: {
+          userId,
+          type: 'credit',
+          isSettled: false,
+        },
+        _sum: { amount: true },
+        _count: true,
+      }),
+
+      // 2. 本月收入
+      this.prisma.bill.aggregate({
+        where: {
+          userId,
+          type: 'income',
+          date: { gte: monthStart, lte: monthEnd },
+        },
+        _sum: { amount: true },
+      }),
+
+      // 3. 本月支出
+      this.prisma.bill.aggregate({
+        where: {
+          userId,
+          type: 'expense',
+          date: { gte: monthStart, lte: monthEnd },
+        },
+        _sum: { amount: true },
+      }),
+
+      // 4. 最近5条账单
+      this.prisma.bill.findMany({
+        where: { userId },
+        include: {
+          category: true,
+          customer: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+
+      // 5. 欠款最多的客户（未结算赊账）
+      this.getTopDebtors(userId),
+    ]);
+
+    return {
+      totalUnsettledCredits: (unsettledCredits._sum.amount || new Decimal(0)).toNumber(),
+      unsettledCreditCount: unsettledCredits._count,
+      totalIncome: (monthIncome._sum.amount || new Decimal(0)).toNumber(),
+      totalExpense: (monthExpense._sum.amount || new Decimal(0)).toNumber(),
+      recentBills,
+      topDebtors,
+    };
+  }
+
+  /**
+   * 获取欠款最多的客户列表
+   */
+  private async getTopDebtors(userId: string, limit: number = 5) {
+    // 查询未结算的赊账，按客户分组
+    const unsettledBills = await this.prisma.bill.findMany({
+      where: {
+        userId,
+        type: 'credit',
+        isSettled: false,
+        customerId: { not: null },
+      },
+      select: {
+        customerId: true,
+        amount: true,
+      },
+    });
+
+    // 按客户分组汇总
+    const debtorMap = new Map<number, { totalAmount: number; billCount: number }>();
+    for (const bill of unsettledBills) {
+      if (!bill.customerId) continue;
+      const existing = debtorMap.get(bill.customerId) || { totalAmount: 0, billCount: 0 };
+      existing.totalAmount += bill.amount.toNumber();
+      existing.billCount += 1;
+      debtorMap.set(bill.customerId, existing);
+    }
+
+    // 排序取 top N
+    const sortedDebtors = Array.from(debtorMap.entries())
+      .sort((a, b) => b[1].totalAmount - a[1].totalAmount)
+      .slice(0, limit);
+
+    if (sortedDebtors.length === 0) {
+      return [];
+    }
+
+    // 查询客户详情
+    const customerIds = sortedDebtors.map(([id]) => id);
+    const customers = await this.prisma.customer.findMany({
+      where: { id: { in: customerIds } },
+      select: { id: true, name: true, phone: true },
+    });
+
+    return sortedDebtors.map(([customerId, data]) => {
+      const customer = customers.find((c) => c.id === customerId);
+      return {
+        customerId,
+        customerName: customer?.name || '未知客户',
+        customerPhone: customer?.phone || null,
+        totalAmount: data.totalAmount,
+        billCount: data.billCount,
+      };
+    });
   }
 }

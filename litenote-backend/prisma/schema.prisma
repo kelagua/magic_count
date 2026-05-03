@@ -29,6 +29,7 @@ model User {
   accounts       Account[]        // 用户的账户
   budgets        Budget[]         // 用户的预算
   financialGoals FinancialGoal[]  // 用户的财务目标
+  customers      Customer[]      // 用户的客户
   aiModelConfigs AIModelConfig[]  // 用户的AI模型配置
   chatSessions   ChatSession[]    // 用户的AI聊天会话
 
@@ -84,13 +85,17 @@ model Category {
 model Bill {
   id          Int       @id @default(autoincrement())                            // 账单ID，自增主键
   amount      Decimal   @db.Decimal(15, 4)                                       // 金额，支持15位数字，4位小数
-  type        String    @db.VarChar(10)                                          // 账单类型：'income'(收入) 或 'expense'(支出)
+  type        String    @db.VarChar(10)                                          // 账单类型：'income'(收入)、'expense'(支出) 或 'credit'(赊账)
   description String?   @db.Text                                                 // 账单描述/备注，可选
   date        DateTime  @db.Date                                                 // 账单日期
   time        DateTime? @db.Timestamptz(6)                                       // 具体时间，可选
   categoryId  Int?      @map("category_id")                                      // 关联分类ID，可选
   accountId   Int?      @map("account_id")                                       // 关联账户ID，可选
+  customerId  Int?      @map("customer_id")                                      // 关联客户ID，可选（赊账时关联客户）
   userId      String    @map("user_id") @db.Uuid                                 // 所属用户ID，必填
+  isSettled   Boolean   @default(false) @map("is_settled")                       // 是否已结算（赊账用）
+  settledAt   DateTime? @map("settled_at") @db.Timestamptz(6)                   // 结算时间，可选
+  settledBatchId String? @map("settled_batch_id") @db.VarChar(50)                // 批量结算批次ID，可选
   tags        String[]  @default([])                                             // 标签数组
   notes       String?   @db.Text                                                 // 备注，可选
   receiptUrl  String?   @map("receipt_url") @db.Text                             // 收据图片URL，可选
@@ -102,12 +107,16 @@ model Bill {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)    // 关联用户，级联删除
   category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull) // 关联分类，删除分类时设为null
   account     Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)  // 关联账户，删除账户时设为null
+  customer    Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull) // 关联客户，删除客户时设为null
 
   @@index([userId, date])    // 复合索引：用户ID + 日期，用于按日期查询用户账单
   @@index([userId, type])    // 复合索引：用户ID + 类型，用于按类型统计
   @@index([categoryId])      // 索引：分类ID
   @@index([accountId])       // 索引：账户ID
   @@index([source])          // 索引：来源
+  @@index([customerId])      // 索引：客户ID
+  @@index([isSettled])       // 索引：是否已结算
+  @@index([settledBatchId])  // 索引：结算批次ID
   @@map("bills")
   @@schema("public")
 }
@@ -235,5 +244,25 @@ model ChatMessage {
   @@unique([sessionId, seqNum])
   @@index([sessionId])
   @@map("chat_messages")
+  @@schema("public")
+}
+
+model Customer {
+  id          Int       @id @default(autoincrement())                            // 客户ID，自增主键
+  name        String    @db.VarChar(100)                                         // 客户名称
+  phone       String?   @db.VarChar(20)                                          // 电话
+  address     String?   @db.Text                                                 // 地址
+  notes       String?   @db.Text                                                 // 备注
+  userId      String    @map("user_id") @db.Uuid                                 // 所属用户ID
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)   // 创建时间
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)        // 更新时间
+
+  // 关联关系
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade) // 关联用户，级联删除
+  bills Bill[]                                                                  // 该客户的赊账记录
+
+  @@index([userId])
+  @@index([userId, name])
+  @@map("customers")
   @@schema("public")
 }

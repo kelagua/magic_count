@@ -2,12 +2,15 @@
  * 账单相关API服务
  */
 import { httpService } from '../http';
-import type { 
-  BillData, 
-  CreateBillDto, 
-  UpdateBillDto, 
-  BillQueryParams, 
-  BillStatistics 
+import type {
+  BillData,
+  CreateBillDto,
+  UpdateBillDto,
+  BillQueryParams,
+  BillStatistics,
+  BillType,
+  SettleBatchDto,
+  HomeStatistics,
 } from '../../types/bill';
 import type { ApiResponse, PaginatedResponse } from '../../types/api';
 
@@ -25,9 +28,7 @@ class BillsService {
   /**
    * 获取账单列表
    */
-  async getBills(params?: BillQueryParams): Promise<PaginatedResponse<BillData>> {
-    // 后端返回的数据格式是 { success, message, data, pagination }
-    // 直接返回整个响应，因为它已经包含了 data 和 pagination
+  async getBills(params?: BillQueryParams): Promise<BillListResponse> {
     return httpService.get('/bills', { params }) as Promise<PaginatedResponse<BillData>>;
   }
 
@@ -69,6 +70,20 @@ class BillsService {
   }
 
   /**
+   * 获取首页统计（含赊账概览）
+   */
+  async getHomeStatistics(): Promise<ApiResponse<HomeStatistics>> {
+    return httpService.get('/bills/statistics/home');
+  }
+
+  /**
+   * 批量结算赊账
+   */
+  async settleBatch(data: SettleBatchDto): Promise<ApiResponse<BillData[]>> {
+    return httpService.post('/bills/settle-batch', data);
+  }
+
+  /**
    * 获取今日账单
    */
   async getTodayBills(): Promise<BillListResponse> {
@@ -88,10 +103,10 @@ class BillsService {
     const now = new Date();
     const targetYear = year || now.getFullYear();
     const targetMonth = month || now.getMonth() + 1;
-    
+
     const startDate = `${targetYear}-${targetMonth.toString().padStart(2, '0')}-01`;
     const endDate = new Date(targetYear, targetMonth, 0).toISOString().split('T')[0];
-    
+
     return this.getBills({
       startDate,
       endDate,
@@ -114,7 +129,7 @@ class BillsService {
   /**
    * 按类型获取账单
    */
-  async getBillsByType(type: 'income' | 'expense', params?: BillQueryParams): Promise<BillListResponse> {
+  async getBillsByType(type: BillType, params?: BillQueryParams): Promise<BillListResponse> {
     return this.getBills({
       ...params,
       type,

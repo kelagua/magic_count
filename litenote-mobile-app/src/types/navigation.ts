@@ -28,7 +28,7 @@ declare global {
       // 记账功能
       CreateBill: {
         bill?: BillData;
-        initialType?: 'income' | 'expense';
+        initialType?: 'income' | 'expense' | 'credit';
       };
       EditBill: {
         billId: number;
@@ -60,6 +60,13 @@ declare global {
       // AI 助手
       AIChat: { sessionId?: number } | undefined;
       AIChatSessions: undefined;
+
+      // 客户/赊账
+      Customers: undefined;
+      CustomerDetail: {
+        customerId: number;
+      };
+      UnsettledCredits: undefined;
 
       // 账户管理
       Accounts: undefined;

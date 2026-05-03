@@ -5,7 +5,7 @@
 export interface CategoryData {
   id: number;
   name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   isDefault: boolean;
@@ -17,7 +17,7 @@ export interface CategoryData {
 
 export interface CreateCategoryDto {
   name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   sortOrder?: number;
@@ -25,7 +25,7 @@ export interface CreateCategoryDto {
 
 export interface UpdateCategoryDto {
   name?: string;
-  type?: 'income' | 'expense';
+  type?: 'income' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   sortOrder?: number;

@@ -20,7 +20,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { BillsService } from './bills.service';
-import { CreateBillDto, UpdateBillDto, BillQueryDto } from './dto/bill.dto';
+import { CreateBillDto, UpdateBillDto, BillQueryDto, SettleBatchDto } from './dto/bill.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('bills')
@@ -95,6 +95,72 @@ export class BillsController {
         {
           success: false,
           message: error.message || '获取账单列表失败',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  /**
+   * 批量结算赊账
+   * POST /bills/settle-batch
+   */
+  @ApiOperation({
+    summary: '批量结算赊账',
+    description: '将多条赊账记录标记为已结算',
+  })
+  @ApiResponse({ status: 200, description: '结算成功' })
+  @ApiResponse({ status: 400, description: '请求参数错误' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  @Post('settle-batch')
+  async settleBatch(
+    @CurrentUser('id') userId: string,
+    @Body() settleBatchDto: SettleBatchDto,
+  ) {
+    try {
+      const result = await this.billsService.settleBatch(userId, settleBatchDto);
+
+      return {
+        success: true,
+        message: '批量结算成功',
+        data: result,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          success: false,
+          message: error.message || '批量结算失败',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  /**
+   * 获取首页统计数据
+   * GET /bills/statistics/home
+   */
+  @ApiOperation({
+    summary: '获取首页统计',
+    description: '获取首页仪表盘统计数据，包括未结算赊账、本月收支、近期账单和欠款客户',
+  })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  @Get('statistics/home')
+  async getHomeStatistics(@CurrentUser('id') userId: string) {
+    try {
+      const result = await this.billsService.getHomeStatistics(userId);
+
+      return {
+        success: true,
+        message: '获取首页统计成功',
+        data: result,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          success: false,
+          message: error.message || '获取首页统计失败',
         },
         HttpStatus.BAD_REQUEST,
       );

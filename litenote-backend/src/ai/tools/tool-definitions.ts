@@ -8,7 +8,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: 'create_bills',
     description:
-      '识别并创建账单记录。当用户提到了农资赊账、客户回款或收入支出，且信息足够完整（至少有金额）时调用此工具。如果用户没有指定日期，使用今天的日期。如果用户没有明确指定分类，根据描述自动推断最合适的分类。',
+      '识别并创建账单记录。当用户提到了农资赊账、客户回款或收入支出，且信息足够完整（至少有金额）时调用此工具。如果用户没有指定日期，使用今天的日期。如果用户没有明确指定分类，根据描述自动推断最合适的分类。如果用户提到了赊账，type 使用 credit，并填写 customerName。',
     parameters: {
       type: 'object',
       properties: {
@@ -24,8 +24,8 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
               },
               type: {
                 type: 'string',
-                enum: ['income', 'expense'],
-                description: '类型：income=收入, expense=支出',
+                enum: ['income', 'expense', 'credit'],
+                description: '类型：income=收入, expense=支出, credit=赊账',
               },
               description: {
                 type: 'string',
@@ -38,6 +38,10 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
               date: {
                 type: 'string',
                 description: '日期，YYYY-MM-DD 格式',
+              },
+              customerName: {
+                type: 'string',
+                description: '客户名称（赊账时必填，回款时选填）',
               },
             },
             required: ['amount', 'type', 'description', 'categoryName', 'date'],
@@ -64,12 +68,20 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
         type: {
           type: 'string',
-          enum: ['income', 'expense'],
+          enum: ['income', 'expense', 'credit'],
           description: '筛选类型，不传则返回全部',
         },
         categoryName: {
           type: 'string',
           description: '按分类名称筛选',
+        },
+        customerName: {
+          type: 'string',
+          description: '按客户名称筛选',
+        },
+        isSettled: {
+          type: 'boolean',
+          description: '是否已结算（筛选赊账的结算状态），不传则返回全部',
         },
         limit: {
           type: 'number',
@@ -110,6 +122,44 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description: '统计结束日期，YYYY-MM-DD 格式',
         },
       },
+    },
+  },
+  {
+    name: 'query_customers',
+    description:
+      '查询客户信息及其赊账状态。当用户想查看客户列表、搜索客户、了解某客户的赊账情况时调用。',
+    parameters: {
+      type: 'object',
+      properties: {
+        search: {
+          type: 'string',
+          description: '搜索关键词（按名称或电话模糊搜索）',
+        },
+        includeUnsettled: {
+          type: 'boolean',
+          description: '是否包含该客户的未结算赊账信息，默认true',
+        },
+      },
+    },
+  },
+  {
+    name: 'settle_credits',
+    description:
+      '结算赊账记录。当用户表示要还款、结清赊账时调用此工具。需要提供要结算的账单ID列表。',
+    parameters: {
+      type: 'object',
+      properties: {
+        billIds: {
+          type: 'array',
+          items: { type: 'number' },
+          description: '要结算的赊账账单ID列表',
+        },
+        paymentMethod: {
+          type: 'string',
+          description: '还款方式，如：现金、微信、银行卡等',
+        },
+      },
+      required: ['billIds'],
     },
   },
 ];

@@ -3,6 +3,7 @@ import { AIConfigService } from '../ai-config.service';
 import { SessionService } from './session.service';
 import { ToolExecutorService } from './tool-executor.service';
 import { CategoriesService } from '../../categories/categories.service';
+import { CustomersService } from '../../customers/customers.service';
 import {
   AIAdapter,
   ClaudeAdapter,
@@ -35,6 +36,7 @@ export class ChatService {
     private readonly sessionService: SessionService,
     private readonly toolExecutor: ToolExecutorService,
     private readonly categoriesService: CategoriesService,
+    private readonly customersService: CustomersService,
     private readonly claudeAdapter: ClaudeAdapter,
     private readonly openaiAdapter: OpenAIAdapter,
     private readonly deepseekAdapter: DeepSeekAdapter,
@@ -583,14 +585,19 @@ export class ChatService {
    * 构建动态 system prompt
    */
   private async buildSystemPrompt(userId: string): Promise<string> {
-    // 获取用户分类
-    const categories = await this.categoriesService.findAll(userId);
+    // 获取用户分类和客户
+    const [categories, customers] = await Promise.all([
+      this.categoriesService.findAll(userId),
+      this.customersService.findAll(userId),
+    ]);
+
     const expenseCategories = categories
       .filter((c) => c.type === 'expense')
       .map((c) => c.name);
     const incomeCategories = categories
       .filter((c) => c.type === 'income')
       .map((c) => c.name);
+    const customerNames = customers.map((c) => c.name);
 
     const today = new Date();
     const dayOfWeek = ['日', '一', '二', '三', '四', '五', '六'][
@@ -607,17 +614,29 @@ export class ChatService {
 - 支出分类: ${expenseCategories.join('、')}
 - 收入分类: ${incomeCategories.join('、')}
 
+## 用户的客户列表
+${customerNames.length > 0 ? customerNames.join('、') : '（暂无客户，可在设置中添加）'}
+
+## 账单类型说明
+- income: 收入（如现金收款、客户回款等）
+- expense: 支出（如进货、运输等）
+- credit: 赊账（客户先拿货后付款，必须关联客户）赊账记录表示客户欠款，还款时使用 settle_credits 工具结算
+
 ## 工具使用规则
 1. 当用户提到了赊账、回款或收入支出，且信息足够完整（至少有金额），调用 create_bills 工具
-2. 如果用户表达了记账意图但信息不完整（缺少金额、客户、品类等关键信息），请友好地追问
-3. 当用户想查看账目记录、客户往来或某段时间内的账单时，调用 query_bills 工具
-4. 当用户要求删除账单时，调用 delete_bills 工具（需要先通过 query_bills 获取账单 ID）
-5. 当用户询问统计、赊账分析、回款分析等问题时，调用 get_statistics 工具
-6. 日常闲聊和普通问答时，直接回复，不要调用任何工具
+2. 赊账记录的 type 必须使用 credit，并且必须填写 customerName（客户名称）
+3. 如果用户表达了记账意图但信息不完整（缺少金额、客户、品类等关键信息），请友好地追问
+4. 当用户想查看账目记录、客户往来或某段时间内的账单时，调用 query_bills 工具
+5. 当用户想查看客户列表或某客户的赊账情况时，调用 query_customers 工具
+6. 当用户要求还款、结清赊账时，先通过 query_bills 获取未结算的赊账 ID，然后调用 settle_credits 工具
+7. 当用户要求删除账单时，调用 delete_bills 工具（需要先通过 query_bills 获取账单 ID）
+8. 当用户询问统计、赊账分析、回款分析等问题时，调用 get_statistics 工具
+9. 日常闲聊和普通问答时，直接回复，不要调用任何工具
 
 ## 注意事项
 - 如果用户没有指定日期，默认使用今天 (${dateStr})
 - 分类名称必须从上面列出的分类中选择
+- 客户名称优先从上面列出的客户中选择，如果是新客户请提示用户先添加
 - 金额必须是正数
 - 回复要简洁友好，使用中文`;
   }

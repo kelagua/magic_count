@@ -1,6 +1,7 @@
 /**
  * 账单项组件 - Neo-Brutalism 风格
  * 描边卡片 + Courier 金额（列表用，无实心阴影）
+ * 支持赊账(credit)类型，显示客户名和结清状态
  */
 import React from 'react';
 import {
@@ -12,20 +13,23 @@ import {
 import { ThemeColors } from '../../theme/colors';
 import { spacing, borderRadius, borderWidth } from '../../theme';
 import { useStyles } from '../../hooks';
+import type { BillType } from '../../types/bill';
 
-export interface BillData {
+export interface BillItemData {
   id: string;
   category: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: BillType;
   date: string;
   description?: string;
   icon: string;
+  customerName?: string;
+  isSettled?: boolean;
 }
 
 interface BillItemProps {
-  bill: BillData;
-  onPress?: (bill: BillData) => void;
+  bill: BillItemData;
+  onPress?: (bill: BillItemData) => void;
 }
 
 const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
@@ -36,6 +40,20 @@ const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
   };
 
   const isIncome = bill.type === 'income';
+  const isCredit = bill.type === 'credit';
+
+  // 根据类型选择图标背景色
+  const getIconBgColor = () => {
+    if (isCredit) return styles._colors.warning;
+    if (isIncome) return styles._colors.success;
+    return styles._colors.accent;
+  };
+
+  // 根据类型选择金额显示
+  const getAmountPrefix = () => {
+    if (isIncome) return '+';
+    return '-';
+  };
 
   return (
     <TouchableOpacity
@@ -46,7 +64,7 @@ const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
       <View style={styles.leftSection}>
         <View style={[
           styles.iconContainer,
-          { backgroundColor: isIncome ? styles._colors.success : styles._colors.accent },
+          { backgroundColor: getIconBgColor() },
         ]}>
           <Text style={styles.icon}>{bill.icon}</Text>
         </View>
@@ -58,16 +76,39 @@ const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
               {bill.description}
             </Text>
           )}
+          {/* 赊账类型显示客户名 */}
+          {isCredit && bill.customerName && (
+            <Text style={styles.customerName}>👤 {bill.customerName}</Text>
+          )}
         </View>
       </View>
 
-      <View style={[
-        styles.amountBadge,
-        isIncome ? styles.incomeBadge : styles.expenseBadge,
-      ]}>
-        <Text style={[styles.amount, isIncome ? styles.incomeAmount : styles.expenseAmount]}>
-          {isIncome ? '+' : '-'}¥{Math.abs(bill.amount).toFixed(2)}
-        </Text>
+      <View style={styles.rightSection}>
+        <View style={[
+          styles.amountBadge,
+          isIncome ? styles.incomeBadge : isCredit ? styles.creditBadge : styles.expenseBadge,
+        ]}>
+          <Text style={[
+            styles.amount,
+            isIncome ? styles.incomeAmount : isCredit ? styles.creditAmount : styles.expenseAmount,
+          ]}>
+            {getAmountPrefix()}¥{Math.abs(bill.amount).toFixed(2)}
+          </Text>
+        </View>
+        {/* 赊账类型显示结清状态 */}
+        {isCredit && (
+          <View style={[
+            styles.settleBadge,
+            bill.isSettled ? styles.settledBadge : styles.unsettledBadge,
+          ]}>
+            <Text style={[
+              styles.settleText,
+              bill.isSettled ? styles.settledText : styles.unsettledText,
+            ]}>
+              {bill.isSettled ? '已结清' : '未结清'}
+            </Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -127,6 +168,16 @@ const createStyles = (colors: ThemeColors) => ({
       fontWeight: '500',
       color: colors.textSecondary,
     },
+    customerName: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.primary,
+      marginTop: 2,
+    },
+    rightSection: {
+      alignItems: 'flex-end',
+      gap: spacing.xs,
+    },
     amountBadge: {
       borderRadius: borderRadius.small,
       borderWidth: borderWidth.thin,
@@ -140,6 +191,9 @@ const createStyles = (colors: ThemeColors) => ({
     expenseBadge: {
       backgroundColor: '#FEE2E2',
     },
+    creditBadge: {
+      backgroundColor: '#FEF3C7',
+    },
     amount: {
       fontSize: 15,
       fontWeight: '800',
@@ -150,6 +204,33 @@ const createStyles = (colors: ThemeColors) => ({
     },
     expenseAmount: {
       color: '#DC2626',
+    },
+    creditAmount: {
+      color: '#D97706',
+    },
+    settleBadge: {
+      borderRadius: borderRadius.small,
+      borderWidth: 1,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+    },
+    settledBadge: {
+      backgroundColor: '#DCFCE7',
+      borderColor: '#86EFAC',
+    },
+    unsettledBadge: {
+      backgroundColor: '#FEF3C7',
+      borderColor: '#FCD34D',
+    },
+    settleText: {
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    settledText: {
+      color: '#16A34A',
+    },
+    unsettledText: {
+      color: '#D97706',
     },
   }),
   _colors: colors,

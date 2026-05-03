@@ -2,7 +2,8 @@
  * 业务组件导出文件
  */
 
-export { default as BillItem, type BillData } from './BillItem';
+export { default as BillItem } from './BillItem';
+export type { BillItemData } from './BillItem';
 export { PaymentNotificationSettings } from './PaymentNotificationSettings';
 
 // 新增组件
@@ -16,3 +17,4 @@ export { default as InsightCard } from './InsightCard';
 export type { InsightCardProps, InsightType } from './InsightCard';
 export { default as QuickAction } from './QuickAction';
 export type { QuickActionProps } from './QuickAction';
+export { CustomerPicker } from './CustomerPicker';

@@ -10,6 +10,8 @@ import {
   IsNotEmpty,
   IsIn,
   MaxLength,
+  IsArray,
+  ArrayMinSize,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -17,6 +19,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export enum BillType {
   INCOME = 'income',
   EXPENSE = 'expense',
+  CREDIT = 'credit',
 }
 
 export class CreateBillDto {
@@ -34,9 +37,9 @@ export class CreateBillDto {
   @ApiProperty({
     description: '账单类型',
     example: 'expense',
-    enum: ['income', 'expense'],
+    enum: ['income', 'expense', 'credit'],
   })
-  @IsEnum(BillType, { message: '类型必须是income或expense' })
+  @IsEnum(BillType, { message: '类型必须是income、expense或credit' })
   type: BillType;
 
   @ApiProperty({
@@ -66,6 +69,15 @@ export class CreateBillDto {
   @IsOptional()
   @IsNumber({}, { message: '分类ID必须是数字' })
   categoryId?: number;
+
+  @ApiProperty({
+    description: '客户ID（赊账时关联客户）',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: '客户ID必须是数字' })
+  customerId?: number;
 }
 
 // 内部使用的完整DTO，包含userId
@@ -83,11 +95,11 @@ export class UpdateBillDto {
 
   @ApiProperty({
     description: '账单类型',
-    enum: ['income', 'expense'],
+    enum: ['income', 'expense', 'credit'],
     required: false,
   })
   @IsOptional()
-  @IsEnum(BillType, { message: '类型必须是income或expense' })
+  @IsEnum(BillType, { message: '类型必须是income、expense或credit' })
   type?: BillType;
 
   @ApiProperty({
@@ -113,6 +125,15 @@ export class UpdateBillDto {
   @IsOptional()
   @IsNumber({}, { message: '分类ID必须是数字' })
   categoryId?: number;
+
+  @ApiProperty({
+    description: '客户ID（赊账时关联客户）',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: '客户ID必须是数字' })
+  customerId?: number;
 }
 
 export class BillQueryDto {
@@ -133,11 +154,11 @@ export class BillQueryDto {
 
   @ApiProperty({
     description: '账单类型',
-    enum: ['income', 'expense'],
+    enum: ['income', 'expense', 'credit'],
     required: false,
   })
   @IsOptional()
-  @IsEnum(BillType, { message: '类型必须是income或expense' })
+  @IsEnum(BillType, { message: '类型必须是income、expense或credit' })
   type?: BillType;
 
   @ApiProperty({ description: '分类ID', example: 1, required: false })
@@ -145,6 +166,29 @@ export class BillQueryDto {
   @Type(() => Number)
   @IsNumber({}, { message: '分类ID必须是数字' })
   categoryId?: number;
+
+  @ApiProperty({
+    description: '客户ID',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: '客户ID必须是数字' })
+  customerId?: number;
+
+  @ApiProperty({
+    description: '是否已结算（赊账用）',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return undefined;
+  })
+  isSettled?: boolean;
 
   @ApiProperty({
     description: '开始日期',
@@ -184,4 +228,25 @@ export class BillQueryDto {
   @IsOptional()
   @IsIn(['asc', 'desc'], { message: '排序方向必须是asc或desc' })
   orderDirection?: 'asc' | 'desc' = 'desc';
+}
+
+export class SettleBatchDto {
+  @ApiProperty({
+    description: '要结算的账单ID列表',
+    example: [1, 2, 3],
+  })
+  @IsArray({ message: 'billIds必须是数组' })
+  @ArrayMinSize(1, { message: '至少选择一条账单' })
+  @IsNumber({}, { each: true, message: '账单ID必须是数字' })
+  billIds: number[];
+
+  @ApiProperty({
+    description: '还款方式',
+    example: '现金',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: '还款方式必须是字符串' })
+  @MaxLength(50, { message: '还款方式长度不能超过50个字符' })
+  paymentMethod?: string;
 }

@@ -5,3 +5,4 @@
 export * from './api';
 export * from './bill';
 export * from './category';
+export * from './customer';

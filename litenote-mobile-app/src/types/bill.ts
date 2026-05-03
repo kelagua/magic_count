@@ -2,47 +2,75 @@
  * 账单相关类型定义
  */
 import type { CategoryData } from './category';
+import type { CustomerData } from './customer';
 
-export type BillType = 'income' | 'expense';
+export type BillType = 'income' | 'expense' | 'credit';
 
 export interface BillData {
   id: number;
   amount: number;
-  type: 'income' | 'expense';
+  type: BillType;
   description?: string;
   date: string;
   categoryId?: number;
+  customerId?: number;
+  isSettled?: boolean;
+  settledAt?: string;
+  settledBatchId?: number;
   userId: string;
   createdAt: string;
   updatedAt: string;
   category?: CategoryData;
+  customer?: CustomerData;
 }
 
 export interface CreateBillDto {
   amount: number;
-  type: 'income' | 'expense';
+  type: BillType;
   description?: string;
   date: string;
   categoryId?: number;
+  customerId?: number;
 }
 
 export interface UpdateBillDto {
   amount?: number;
-  type?: 'income' | 'expense';
+  type?: BillType;
   description?: string;
   date?: string;
   categoryId?: number;
+  customerId?: number;
 }
 
 export interface BillQueryParams {
   page?: number;
   limit?: number;
-  type?: 'income' | 'expense';
+  type?: BillType;
   categoryId?: number;
+  customerId?: number;
+  isSettled?: boolean;
   startDate?: string;
   endDate?: string;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
+}
+
+export interface SettleBatchDto {
+  billIds: number[];
+  paymentMethod?: string;
+}
+
+export interface HomeStatistics {
+  totalUnsettled: number;
+  unsettledCount: number;
+  totalSettledThisMonth: number;
+  settledCountThisMonth: number;
+  topDebtors: Array<{
+    customerId: number;
+    customerName: string;
+    totalUnsettled: number;
+    unsettledCount: number;
+  }>;
 }
 
 export interface CategoryStatistic {

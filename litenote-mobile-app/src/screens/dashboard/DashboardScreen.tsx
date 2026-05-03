@@ -3,7 +3,7 @@
  * 粗线框、饱和糖果色块、粗描边、平移阴影
  * 像彩色积木构成的界面
  */
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,9 @@ import { borderRadius, borderWidth, spacing, shadow } from '../../theme/spacing'
 import { BrutalPressable } from '../../components/ui';
 import { DashboardSkeleton } from '../../components/skeleton';
 import { useDashboard, useStyles } from '../../hooks';
+import { billsService } from '../../services';
 import type { BillData } from '../../types/bill';
+import type { HomeStatistics } from '../../types/bill';
 
 /**
  * 列表项入场动画 - 交错滑入 + 淡入
@@ -67,6 +69,23 @@ export default function DashboardScreen() {
     refetch,
   } = useDashboard();
 
+  // 赊账概览数据
+  const [homeStats, setHomeStats] = useState<HomeStatistics | null>(null);
+
+  useEffect(() => {
+    const fetchHomeStats = async () => {
+      try {
+        const response = await billsService.getHomeStatistics();
+        if (response.success && response.data) {
+          setHomeStats(response.data);
+        }
+      } catch (error) {
+        // 静默处理，不影响首页显示
+      }
+    };
+    fetchHomeStats();
+  }, [isFetching]);
+
   const currentDate = new Date();
   const monthName = `${currentDate.getMonth() + 1}月账本`;
   const yearName = `${currentDate.getFullYear()}`;
@@ -93,6 +112,18 @@ export default function DashboardScreen() {
 
   const handleViewBillDetail = (bill: BillData) => {
     navigation.navigate('CreateBill', { bill });
+  };
+
+  const handleViewCustomers = () => {
+    (navigation as any).navigate('Customers');
+  };
+
+  const handleViewUnsettledCredits = () => {
+    (navigation as any).navigate('UnsettledCredits');
+  };
+
+  const handleCreateCredit = () => {
+    (navigation as any).navigate('CreateBill', { initialType: 'credit' });
   };
 
   // 分类图标
@@ -184,6 +215,109 @@ export default function DashboardScreen() {
         </View>
       </TouchableOpacity>
 
+      {/* ========== 赊账概览 ========== */}
+      {homeStats && (homeStats.totalUnsettled > 0 || homeStats.unsettledCount > 0) && (
+        <TouchableOpacity
+          style={styles.creditOverviewCard}
+          onPress={handleViewUnsettledCredits}
+          activeOpacity={0.8}
+        >
+          <View style={styles.creditOverviewHeader}>
+            <View style={styles.creditOverviewTitleRow}>
+              <Text style={styles.creditOverviewSticker}>💳</Text>
+              <Text style={styles.creditOverviewTitle}>赊账概览</Text>
+            </View>
+            <View style={styles.creditBadgeWarning}>
+              <Text style={styles.creditBadgeText}>{homeStats.unsettledCount}笔未结清</Text>
+            </View>
+          </View>
+
+          <View style={styles.creditOverviewStats}>
+            <View style={styles.creditStatBlock}>
+              <Text style={styles.creditStatLabel}>未结清总额</Text>
+              <Text style={styles.creditStatAmount}>¥ {homeStats.totalUnsettled.toFixed(2)}</Text>
+            </View>
+            {homeStats.totalSettledThisMonth > 0 && (
+              <>
+                <View style={styles.creditStatDivider} />
+                <View style={styles.creditStatBlock}>
+                  <Text style={styles.creditStatLabel}>本月已结清</Text>
+                  <Text style={styles.creditStatSettled}>¥ {homeStats.totalSettledThisMonth.toFixed(2)}</Text>
+                </View>
+              </>
+            )}
+          </View>
+
+          {/* 主要欠款人 */}
+          {homeStats.topDebtors && homeStats.topDebtors.length > 0 && (
+            <View style={styles.debtorList}>
+              <Text style={styles.debtorListTitle}>主要欠款人</Text>
+              {homeStats.topDebtors.slice(0, 3).map((debtor) => (
+                <View key={debtor.customerId} style={styles.debtorItem}>
+                  <View style={styles.debtorAvatar}>
+                    <Text style={styles.debtorAvatarText}>
+                      {debtor.customerName.charAt(0)}
+                    </Text>
+                  </View>
+                  <View style={styles.debtorInfo}>
+                    <Text style={styles.debtorName}>{debtor.customerName}</Text>
+                    <Text style={styles.debtorCount}>{debtor.unsettledCount}笔赊账</Text>
+                  </View>
+                  <Text style={styles.debtorAmount}>¥ {debtor.totalUnsettled.toFixed(2)}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </TouchableOpacity>
+      )}
+
+      {/* ========== 快捷操作 ========== */}
+      <View style={styles.quickActions}>
+        <TouchableOpacity
+          style={styles.quickActionItem}
+          onPress={handleCreateCredit}
+          activeOpacity={0.8}
+        >
+          <View style={styles.quickActionIconBlock}>
+            <Text style={styles.quickActionIcon}>📝</Text>
+          </View>
+          <Text style={styles.quickActionLabel}>记赊账</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quickActionItem}
+          onPress={handleViewUnsettledCredits}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.quickActionIconBlock, { backgroundColor: styles._colors.warning }]}>
+            <Text style={styles.quickActionIcon}>💳</Text>
+          </View>
+          <Text style={styles.quickActionLabel}>未结清</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quickActionItem}
+          onPress={handleViewCustomers}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.quickActionIconBlock, { backgroundColor: styles._colors.accent }]}>
+            <Text style={styles.quickActionIcon}>👥</Text>
+          </View>
+          <Text style={styles.quickActionLabel}>客户</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quickActionItem}
+          onPress={handleAddBill}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.quickActionIconBlock, { backgroundColor: styles._colors.success }]}>
+            <Text style={styles.quickActionIcon}>💰</Text>
+          </View>
+          <Text style={styles.quickActionLabel}>记回款</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* ========== Recent Transactions ========== */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -231,11 +365,11 @@ export default function DashboardScreen() {
                   </View>
                   <View style={[
                     styles.amountBadge,
-                    bill.type === 'income' ? styles.incomeBadge : styles.expenseBadge,
+                    bill.type === 'income' ? styles.incomeBadge : bill.type === 'credit' ? styles.creditBadge : styles.expenseBadge,
                   ]}>
                     <Text style={[
                       styles.transactionAmount,
-                      bill.type === 'income' ? styles.incomeAmount : styles.expenseAmount,
+                      bill.type === 'income' ? styles.incomeAmount : bill.type === 'credit' ? styles.creditAmount : styles.expenseAmount,
                     ]}>
                       {bill.type === 'income' ? '+' : '-'}¥{Number(bill.amount).toFixed(2)}
                     </Text>
@@ -619,6 +753,170 @@ const createStyles = (colors: ThemeColors) => ({
     },
     expenseAmount: {
       color: '#DC2626',
+    },
+    creditBadge: {
+      backgroundColor: '#FEF3C7',
+    },
+    creditAmount: {
+      color: '#D97706',
+    },
+
+    // ===== Credit Overview =====
+    creditOverviewCard: {
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.card,
+      borderWidth: borderWidth.thick,
+      borderColor: colors.stroke,
+      padding: spacing.xl,
+      marginBottom: spacing.xxl,
+      ...shadow.large,
+    },
+    creditOverviewHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    creditOverviewTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    creditOverviewSticker: {
+      fontSize: 20,
+    },
+    creditOverviewTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.textPrimary,
+    },
+    creditBadgeWarning: {
+      backgroundColor: '#FEF3C7',
+      borderRadius: borderRadius.small,
+      borderWidth: borderWidth.thin,
+      borderColor: colors.stroke,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+    },
+    creditBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#D97706',
+    },
+    creditOverviewStats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    creditStatBlock: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    creditStatLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.textTertiary,
+      marginBottom: spacing.xs,
+    },
+    creditStatAmount: {
+      fontSize: 24,
+      fontWeight: '900',
+      color: colors.warning,
+      fontFamily: 'Courier',
+    },
+    creditStatSettled: {
+      fontSize: 24,
+      fontWeight: '900',
+      color: colors.success,
+      fontFamily: 'Courier',
+    },
+    creditStatDivider: {
+      width: borderWidth.thin,
+      height: 40,
+      backgroundColor: colors.divider,
+      marginHorizontal: spacing.md,
+    },
+    debtorList: {
+      borderTopWidth: borderWidth.thin,
+      borderTopColor: colors.divider,
+      paddingTop: spacing.md,
+    },
+    debtorListTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.textTertiary,
+      marginBottom: spacing.sm,
+    },
+    debtorItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+    },
+    debtorAvatar: {
+      width: 32,
+      height: 32,
+      borderRadius: borderRadius.small,
+      backgroundColor: colors.accent,
+      borderWidth: borderWidth.thin,
+      borderColor: colors.stroke,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: spacing.md,
+    },
+    debtorAvatarText: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: colors.textPrimary,
+    },
+    debtorInfo: {
+      flex: 1,
+    },
+    debtorName: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textPrimary,
+    },
+    debtorCount: {
+      fontSize: 11,
+      fontWeight: '500',
+      color: colors.textTertiary,
+      fontFamily: 'Courier',
+    },
+    debtorAmount: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: colors.warning,
+      fontFamily: 'Courier',
+    },
+
+    // ===== Quick Actions =====
+    quickActions: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginBottom: spacing.xxl,
+    },
+    quickActionItem: {
+      flex: 1,
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    quickActionIconBlock: {
+      width: 48,
+      height: 48,
+      borderRadius: borderRadius.medium,
+      backgroundColor: colors.primaryLight,
+      borderWidth: borderWidth.thin,
+      borderColor: colors.stroke,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    quickActionIcon: {
+      fontSize: 22,
+    },
+    quickActionLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.textPrimary,
     },
 
     // ===== Empty State =====

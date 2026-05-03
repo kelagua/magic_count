@@ -17,9 +17,10 @@ import {
 } from './adapters';
 import { BillsModule } from '../bills/bills.module';
 import { CategoriesModule } from '../categories/categories.module';
+import { CustomersModule } from '../customers/customers.module';
 
 @Module({
-  imports: [BillsModule, CategoriesModule],
+  imports: [BillsModule, CategoriesModule, CustomersModule],
   controllers: [AIController, AIConfigController, ChatController, AsrController],
   providers: [
     AIService,

@@ -1,6 +1,7 @@
 /**
  * 创建/编辑账单屏幕 - Neo-Brutalism 风格
  * 描边金额输入 + 糖果色类型切换 + 描边分类网格
+ * 支持赊账(credit)类型，选择客户
  */
 import React, { useState } from 'react';
 import {
@@ -12,12 +13,14 @@ import {
 } from 'react-native';
 import { Text } from 'react-native';
 import { Toast } from '../../components';
-import { AddCategoryModal, ConfirmModal } from '../../components/modals';
+import { AddCategoryModal, ConfirmModal, CustomerFormModal } from '../../components/modals';
+import { CustomerPicker } from '../../components/business';
 import { useToast, useCategories, useStyles } from '../../hooks';
 import { useAlert } from '../../providers';
-import { billsService, categoriesService } from '../../services';
+import { billsService, categoriesService, customersService } from '../../services';
 import { invalidateCache } from '../../lib/queryClient';
-import type { BillData, CreateBillDto, UpdateBillDto } from '../../types/bill';
+import { ttsService } from '../../services/tts';
+import type { BillData, CreateBillDto, UpdateBillDto, BillType } from '../../types/bill';
 import type { CategoryData } from '../../types/category';
 import { ThemeColors } from '../../theme/colors';
 import { spacing, borderRadius, borderWidth, shadow } from '../../theme';
@@ -38,7 +41,7 @@ interface CreateBillScreenProps {
   route?: {
     params?: {
       bill?: BillData;
-      initialType?: 'income' | 'expense';
+      initialType?: BillType;
     };
   };
 }
@@ -53,7 +56,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
   const isEditing = !!editingBill;
 
   const [amount, setAmount] = useState(editingBill?.amount?.toString() || '');
-  const [type, setType] = useState<'income' | 'expense'>(
+  const [type, setType] = useState<BillType>(
     editingBill?.type || initialType || 'expense'
   );
   const [selectedCategory, setSelectedCategory] = useState<CategoryData | null>(
@@ -62,15 +65,25 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
   const [description, setDescription] = useState(editingBill?.description || '');
   const [loading, setLoading] = useState(false);
 
-  const { categories } = useCategories(type);
+  // 赊账相关
+  const [customerId, setCustomerId] = useState<number | undefined>(editingBill?.customerId);
+  const [customerName, setCustomerName] = useState(editingBill?.customer?.name || '');
+  const [showCustomerPicker, setShowCustomerPicker] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+
+  const { categories } = useCategories(type === 'credit' ? 'expense' : type);
 
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryData | null>(null);
 
-  const handleTypeChange = (newType: 'income' | 'expense') => {
+  const handleTypeChange = (newType: BillType) => {
     setType(newType);
     setSelectedCategory(null);
+    if (newType !== 'credit') {
+      setCustomerId(undefined);
+      setCustomerName('');
+    }
   };
 
   const handleCategorySelect = (category: CategoryData) => {
@@ -111,6 +124,31 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
     invalidateCache.categories();
   };
 
+  const handleCustomerSelect = (selectedId: number, selectedName: string) => {
+    if (selectedName === '__NEW__') {
+      // 打开新建客户表单
+      setShowCustomerForm(true);
+      return;
+    }
+    setCustomerId(selectedId);
+    setCustomerName(selectedName);
+  };
+
+  const handleCustomerFormSuccess = async () => {
+    // 创建客户后，自动选择最新客户
+    try {
+      const response = await customersService.getCustomers({ limit: 1 });
+      if (response.data && response.data.length > 0) {
+        const latestCustomer = response.data[0];
+        setCustomerId(latestCustomer.id);
+        setCustomerName(latestCustomer.name);
+        showSuccess(`客户"${latestCustomer.name}"创建成功`);
+      }
+    } catch (error) {
+      // 如果获取失败，让用户手动选择
+    }
+  };
+
   const getCategoryList = () => {
     const mergedCategories: CategoryData[] = [];
     FIXED_CATEGORIES.forEach(fixedCat => {
@@ -134,6 +172,10 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
       showError('请选择分类');
       return false;
     }
+    if (type === 'credit' && !customerId) {
+      showError('赊账需要选择客户');
+      return false;
+    }
     return true;
   };
 
@@ -149,6 +191,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
           ? new Date(editingBill!.date).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0],
         categoryId: selectedCategory!.id,
+        ...(type === 'credit' && customerId ? { customerId } : {}),
       };
       let response;
       if (isEditing) {
@@ -159,6 +202,17 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
       if (response.success) {
         invalidateCache.bills();
         showSuccess(isEditing ? '账单更新成功' : '账单创建成功');
+
+        // TTS 语音播报
+        if (!isEditing) {
+          ttsService.speakBillResult({
+            amount: parseFloat(amount),
+            type,
+            description,
+            customerName: type === 'credit' ? customerName : undefined,
+          });
+        }
+
         navigation.goBack();
       } else {
         showError(response.message || '操作失败');
@@ -201,14 +255,14 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* 赊账/回款切换 */}
+          {/* 赊账/回款/赊账(credit) 切换 */}
           <View style={styles.typeSelector}>
             <TouchableOpacity
               style={[styles.typeButton, type === 'expense' && styles.typeButtonExpenseActive]}
               onPress={() => handleTypeChange('expense')}
             >
               <Text style={[styles.typeButtonText, type === 'expense' && styles.typeButtonTextActive]}>
-                赊账
+                支出
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -219,7 +273,35 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
                 回款
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.typeButton, type === 'credit' && styles.typeButtonCreditActive]}
+              onPress={() => handleTypeChange('credit')}
+            >
+              <Text style={[styles.typeButtonText, type === 'credit' && styles.typeButtonTextActive]}>
+                赊账
+              </Text>
+            </TouchableOpacity>
           </View>
+
+          {/* 客户选择 - 仅赊账类型显示 */}
+          {type === 'credit' && (
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>👤 客户</Text>
+              <TouchableOpacity
+                style={styles.customerSelector}
+                onPress={() => setShowCustomerPicker(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.customerSelectorText,
+                  customerName ? styles.customerSelectorTextActive : {},
+                ]}>
+                  {customerName || '选择客户'}
+                </Text>
+                <Text style={styles.customerSelectorArrow}>→</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* 金额输入 */}
           <View style={styles.formGroup}>
@@ -302,7 +384,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
         visible={showAddCategoryModal}
         onClose={() => setShowAddCategoryModal(false)}
         onSuccess={handleAddCategorySuccess}
-        billType={type}
+        billType={type === 'credit' ? 'expense' : type}
       />
 
       <ConfirmModal
@@ -313,6 +395,19 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
         cancelText="取消"
         onConfirm={handleConfirmDelete}
         onCancel={() => { setShowDeleteConfirm(false); setCategoryToDelete(null); }}
+      />
+
+      <CustomerPicker
+        visible={showCustomerPicker}
+        onClose={() => setShowCustomerPicker(false)}
+        onSelect={handleCustomerSelect}
+        selectedCustomerId={customerId}
+      />
+
+      <CustomerFormModal
+        visible={showCustomerForm}
+        onClose={() => setShowCustomerForm(false)}
+        onSuccess={handleCustomerFormSuccess}
       />
     </View>
   );
@@ -332,7 +427,7 @@ const createStyles = (colors: ThemeColors) => ({
       padding: 4,
       marginBottom: spacing.lg,
       alignSelf: 'center',
-      width: '60%',
+      width: '80%',
     },
     typeButton: {
       flex: 1,
@@ -350,8 +445,39 @@ const createStyles = (colors: ThemeColors) => ({
       borderWidth: borderWidth.thin,
       borderColor: colors.stroke,
     },
-    typeButtonText: { fontSize: 16, fontWeight: '700', color: colors.textSecondary },
+    typeButtonCreditActive: {
+      backgroundColor: colors.warning,
+      borderWidth: borderWidth.thin,
+      borderColor: colors.stroke,
+    },
+    typeButtonText: { fontSize: 15, fontWeight: '700', color: colors.textSecondary },
     typeButtonTextActive: { color: '#FFFFFF', fontWeight: '800' },
+    // 客户选择器
+    customerSelector: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.card,
+      borderWidth: borderWidth.medium,
+      borderColor: colors.stroke,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+    },
+    customerSelectorText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textTertiary,
+    },
+    customerSelectorTextActive: {
+      color: colors.textPrimary,
+      fontWeight: '800',
+    },
+    customerSelectorArrow: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.primary,
+    },
     formGroup: { marginBottom: spacing.lg },
     formLabel: { fontSize: 14, fontWeight: '800', color: colors.textPrimary, marginBottom: spacing.sm },
     amountInputContainer: {

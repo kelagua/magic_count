@@ -7,7 +7,7 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicat
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Sentry from '@sentry/react-native';
-import { Home, BarChart3, MessageCircle, User } from 'lucide-react-native';
+import { Home, BarChart3, MessageCircle, User, BookOpen } from 'lucide-react-native';
 
 // 导入屏幕组件
 import SettingsScreen from '../screens/SettingsScreen';
@@ -23,6 +23,11 @@ import { DashboardScreen } from '../screens/dashboard';
 import { ReportsScreen } from '../screens/reports';
 import { AIChatScreen, AIChatSessionsScreen } from '../screens/ai';
 import { LoginScreen, UserAgreementScreen, PrivacyPolicyScreen, EditProfileScreen } from '../screens/auth';
+import {
+  CustomersScreen,
+  CustomerDetailScreen,
+  UnsettledCreditsScreen,
+} from '../screens/customers';
 import FinancialGoalScreen from '../screens/FinancialGoalScreen';
 import BudgetScreen from '../screens/BudgetScreen';
 
@@ -46,6 +51,10 @@ const ChatIcon = ({ color, size = 24 }: { color: string; size?: number }) => (
   <MessageCircle size={size} color={color} strokeWidth={2.5} />
 );
 
+const CreditIcon = ({ color, size = 24 }: { color: string; size?: number }) => (
+  <BookOpen size={size} color={color} strokeWidth={2.5} />
+);
+
 const UserIcon = ({ color, size = 24 }: { color: string; size?: number }) => (
   <User size={size} color={color} strokeWidth={2.5} />
 );
@@ -61,7 +70,7 @@ const tabs: TabConfig[] = [
   { key: 'dashboard', label: '首页', IconComponent: HomeIcon },
   { key: 'reports', label: '统计', IconComponent: ChartIcon },
   { key: 'add', label: '记账', IconComponent: () => null },
-  { key: 'ai', label: 'AI助手', IconComponent: ChatIcon },
+  { key: 'customers', label: '赊账', IconComponent: CreditIcon },
   { key: 'settings', label: '我的', IconComponent: UserIcon },
 ];
 
@@ -241,6 +250,8 @@ function MainNavigator({ navigation }: { navigation: any }) {
         return <DashboardScreen />;
       case 'reports':
         return <ReportsScreen />;
+      case 'customers':
+        return <CustomersScreen />;
       case 'settings':
         return <SettingsScreen navigation={navigation} />;
       case 'ai':
@@ -412,6 +423,22 @@ export default function AppNavigator() {
               name="AIChat"
               component={AIChatScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CustomerDetail"
+              component={CustomerDetailScreen}
+              options={{
+                headerShown: true,
+                title: '客户详情',
+              }}
+            />
+            <Stack.Screen
+              name="UnsettledCredits"
+              component={UnsettledCreditsScreen}
+              options={{
+                headerShown: true,
+                title: '未结清赊账',
+              }}
             />
           </>
         )}
