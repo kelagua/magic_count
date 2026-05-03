@@ -6,9 +6,18 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  // 强制校验关键环境变量
-  if (!process.env.JWT_SECRET) {
-    console.error('FATAL: JWT_SECRET environment variable is required');
+  // 🔒 启动前环境变量校验
+  const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL'];
+  const missing = requiredEnvVars.filter(key => !process.env[key]);
+  if (missing.length > 0) {
+    console.error(`❌ FATAL: Missing required environment variables: ${missing.join(', ')}`);
+    console.error('   Please set them in .env or environment before starting the server.');
+    process.exit(1);
+  }
+
+  // 生产环境强制配置 CORS_ORIGINS
+  if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGINS) {
+    console.error('❌ FATAL: CORS_ORIGINS must be set in production environment');
     process.exit(1);
   }
 
