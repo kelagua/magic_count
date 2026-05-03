@@ -16,10 +16,12 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-  // Enable CORS for React Native
+  // Enable CORS - restrict to configured origins in production
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+    : ['http://localhost:3000', 'http://localhost:3001'];
   app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: corsOrigins,
     credentials: true,
   });
 

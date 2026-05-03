@@ -11,7 +11,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     PrismaModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'CHANGE-ME-set-JWT_SECRET-env-var',
+      secret: process.env.JWT_SECRET,
       signOptions: {
         expiresIn: '7d', // Token 有效期 7 天
       },
