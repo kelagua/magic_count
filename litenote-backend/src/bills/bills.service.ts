@@ -14,11 +14,15 @@ import {
 import { Decimal } from '@prisma/client/runtime/library';
 import { PaginatedResponse } from '../common/interfaces/api-response.interface';
 import { v4 as uuidv4 } from 'uuid';
-import { yuanToFen } from '../common/utils';
+import { yuanToFen, fenToYuan } from '../common/utils/currency';
 
 /**
- * 所有金额在 API 响应中以"分"为单位返回（整数），前端显示时除以 100。
- * 数据库仍使用 Decimal(15,4) 存储。
+ * 金额约定（方案 B — 全链路一致）：
+ * - 数据库使用 Decimal(15,4) 存储，单位为"元"
+ * - API 响应中金额一律以"元"为单位返回（number，保留2位小数）
+ * - 统计汇总等需要累加运算时，先转为整数"分"（yuanToFen）累加，再转回元（fenToYuan）返回
+ * - CRUD 操作返回的 Prisma 对象中 amount 为 Decimal，序列化时自动转为 number（元）
+ * - 前端显示时直接使用返回的元值，无需任何换算
  */
 
 @Injectable()
@@ -155,7 +159,7 @@ export class BillsService {
     });
 
     if (!bill) {
-      throw new Error('账单不存在');
+      throw new NotFoundException('账单不存在');
     }
 
     return bill;
@@ -274,7 +278,7 @@ export class BillsService {
       select: { id: true, name: true, icon: true },
     });
 
-    // 组装支出分类统计数据
+    // 组装支出分类统计数据（内部用分计算百分比，返回值转回元）
     const totalExpenseAmount = expenseStats._sum.amount || new Decimal(0);
     const totalExpenseAmountFen = yuanToFen(totalExpenseAmount);
     const expenseCategoryData = expenseCategoryStats
@@ -290,14 +294,14 @@ export class BillsService {
           categoryId: stat.categoryId,
           categoryName: category?.name || '未分类',
           categoryIcon: category?.icon || '📊',
-          amount: amountFen,
+          amount: fenToYuan(amountFen),
           percentage: parseFloat(percentage.toFixed(1)),
           count: stat._count,
         };
       })
       .sort((a, b) => b.amount - a.amount);
 
-    // 组装收入分类统计数据
+    // 组装收入分类统计数据（内部用分计算百分比，返回值转回元）
     const totalIncomeAmount = incomeStats._sum.amount || new Decimal(0);
     const totalIncomeAmountFen = yuanToFen(totalIncomeAmount);
     const incomeCategoryData = incomeCategoryStats
@@ -313,7 +317,7 @@ export class BillsService {
           categoryId: stat.categoryId,
           categoryName: category?.name || '未分类',
           categoryIcon: category?.icon || '💰',
-          amount: amountFen,
+          amount: fenToYuan(amountFen),
           percentage: parseFloat(percentage.toFixed(1)),
           count: stat._count,
         };
@@ -351,35 +355,35 @@ export class BillsService {
       });
 
       // 在应用层按月份分组（使用分单位累加，避免浮点精度问题）
-      const monthlyMap = new Map<string, { income: number; expense: number }>();
+      const monthlyMap = new Map<string, { incomeFen: number; expenseFen: number }>();
 
       monthlyBills.forEach((bill) => {
         const date = new Date(bill.date);
         const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
         if (!monthlyMap.has(monthKey)) {
-          monthlyMap.set(monthKey, { income: 0, expense: 0 });
+          monthlyMap.set(monthKey, { incomeFen: 0, expenseFen: 0 });
         }
-        const monthData = monthlyMap.get(monthKey);
+        const monthData = monthlyMap.get(monthKey)!;
         if (bill.type === 'income') {
-          monthData.income += yuanToFen(bill.amount);
+          monthData.incomeFen += yuanToFen(bill.amount);
         } else {
-          monthData.expense += yuanToFen(bill.amount);
+          monthData.expenseFen += yuanToFen(bill.amount);
         }
       });
 
-      // 生成完整的月份序列（从 startDate 到 endDate）
+      // 生成完整的月份序列（从 startDate 到 endDate），金额转回元
       const currentMonth = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), 1);
       const endMonth = new Date(endDateObj.getFullYear(), endDateObj.getMonth(), 1);
 
       while (currentMonth <= endMonth) {
         const monthKey = `${currentMonth.getFullYear()}-${currentMonth.getMonth() + 1}`;
-        const monthData = monthlyMap.get(monthKey) || { income: 0, expense: 0 };
+        const monthData = monthlyMap.get(monthKey) || { incomeFen: 0, expenseFen: 0 };
 
         monthlyTrends.push({
           month: `${currentMonth.getMonth() + 1}月`,
           year: currentMonth.getFullYear(),
-          income: monthData.income,
-          expense: monthData.expense,
+          income: fenToYuan(monthData.incomeFen),
+          expense: fenToYuan(monthData.expenseFen),
         });
 
         currentMonth.setMonth(currentMonth.getMonth() + 1);
@@ -410,32 +414,32 @@ export class BillsService {
         });
 
         // 在应用层按日期分组（使用分单位累加，避免浮点精度问题）
-        const dailyMap = new Map<string, { income: number; expense: number }>();
+        const dailyMap = new Map<string, { incomeFen: number; expenseFen: number }>();
 
         bills.forEach((bill) => {
           const dateKey = bill.date.toISOString().split('T')[0];
           if (!dailyMap.has(dateKey)) {
-            dailyMap.set(dateKey, { income: 0, expense: 0 });
+            dailyMap.set(dateKey, { incomeFen: 0, expenseFen: 0 });
           }
-          const dayData = dailyMap.get(dateKey);
+          const dayData = dailyMap.get(dateKey)!;
           if (bill.type === 'income') {
-            dayData.income += yuanToFen(bill.amount);
+            dayData.incomeFen += yuanToFen(bill.amount);
           } else {
-            dayData.expense += yuanToFen(bill.amount);
+            dayData.expenseFen += yuanToFen(bill.amount);
           }
         });
 
-        // 生成完整的日期序列（包括没有数据的日期）
+        // 生成完整的日期序列（包括没有数据的日期），金额转回元
         for (let i = 0; i <= daysDiff; i++) {
           const dayDate = new Date(start);
           dayDate.setDate(start.getDate() + i);
           const dateKey = dayDate.toISOString().split('T')[0];
-          const dayData = dailyMap.get(dateKey) || { income: 0, expense: 0 };
+          const dayData = dailyMap.get(dateKey) || { incomeFen: 0, expenseFen: 0 };
 
           dailyTrends.push({
             date: dateKey,
-            income: dayData.income,
-            expense: dayData.expense,
+            income: fenToYuan(dayData.incomeFen),
+            expense: fenToYuan(dayData.expenseFen),
           });
         }
 
@@ -452,10 +456,10 @@ export class BillsService {
     const balance = totalIncome.minus(totalExpense);
 
     const result = {
-      // 总体统计（金额单位：分）
-      totalIncome: yuanToFen(totalIncome),
-      totalExpense: yuanToFen(totalExpense),
-      balance: yuanToFen(balance),
+      // 总体统计（金额单位：元）
+      totalIncome: fenToYuan(yuanToFen(totalIncome)),
+      totalExpense: fenToYuan(yuanToFen(totalExpense)),
+      balance: fenToYuan(yuanToFen(balance)),
       incomeCount: incomeStats._count,
       expenseCount: expenseStats._count,
       // 分类统计（用于饼图和分类占比）
@@ -526,7 +530,8 @@ export class BillsService {
         },
       });
 
-      const totalAmount = settledBills.reduce(
+      // 使用整数分累加，再转回元返回
+      const totalAmountFen = settledBills.reduce(
         (sum, bill) => sum + yuanToFen(bill.amount),
         0,
       );
@@ -536,7 +541,7 @@ export class BillsService {
         settledAt: now,
         paymentMethod: paymentMethod || null,
         settledCount: settledBills.length,
-        totalAmount,
+        totalAmount: fenToYuan(totalAmountFen),
         bills: settledBills,
       };
     });
@@ -605,10 +610,10 @@ export class BillsService {
     ]);
 
     return {
-      totalUnsettledCredits: yuanToFen(unsettledCredits._sum.amount),
+      totalUnsettledCredits: fenToYuan(yuanToFen(unsettledCredits._sum.amount)),
       unsettledCreditCount: unsettledCredits._count,
-      totalIncome: yuanToFen(monthIncome._sum.amount),
-      totalExpense: yuanToFen(monthExpense._sum.amount),
+      totalIncome: fenToYuan(yuanToFen(monthIncome._sum.amount)),
+      totalExpense: fenToYuan(yuanToFen(monthExpense._sum.amount)),
       recentBills,
       topDebtors,
     };
@@ -633,18 +638,18 @@ export class BillsService {
     });
 
     // 按客户分组汇总（使用分单位累加，避免浮点精度问题）
-    const debtorMap = new Map<number, { totalAmount: number; billCount: number }>();
+    const debtorMap = new Map<number, { totalAmountFen: number; billCount: number }>();
     for (const bill of unsettledBills) {
       if (!bill.customerId) continue;
-      const existing = debtorMap.get(bill.customerId) || { totalAmount: 0, billCount: 0 };
-      existing.totalAmount += yuanToFen(bill.amount);
+      const existing = debtorMap.get(bill.customerId) || { totalAmountFen: 0, billCount: 0 };
+      existing.totalAmountFen += yuanToFen(bill.amount);
       existing.billCount += 1;
       debtorMap.set(bill.customerId, existing);
     }
 
     // 排序取 top N
     const sortedDebtors = Array.from(debtorMap.entries())
-      .sort((a, b) => b[1].totalAmount - a[1].totalAmount)
+      .sort((a, b) => b[1].totalAmountFen - a[1].totalAmountFen)
       .slice(0, limit);
 
     if (sortedDebtors.length === 0) {
@@ -664,7 +669,7 @@ export class BillsService {
         customerId,
         customerName: customer?.name || '未知客户',
         customerPhone: customer?.phone || null,
-        totalAmount: data.totalAmount,
+        totalAmount: fenToYuan(data.totalAmountFen),
         billCount: data.billCount,
       };
     });

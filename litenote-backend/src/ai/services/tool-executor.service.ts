@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BillsService } from '../../bills/bills.service';
 import { CategoriesService } from '../../categories/categories.service';
 import { CustomersService } from '../../customers/customers.service';
+import { yuanToFen, fenToYuan } from '../../common/utils/currency';
 
 /**
  * 工具执行服务
@@ -234,12 +235,12 @@ export class ToolExecutorService {
         const customerIds = customers.map((c) => c.id);
         const unsettledBills = await this.customersService.getUnsettledCredits(userId);
 
-        // 按客户分组汇总未结算赊账
-        const unsettledMap = new Map<number, { totalAmount: number; billCount: number }>();
+        // 按客户分组汇总未结算赊账（使用整数分累加，避免浮点精度问题）
+        const unsettledMap = new Map<number, { totalAmountFen: number; billCount: number }>();
         for (const bill of unsettledBills) {
           if (!bill.customerId) continue;
-          const existing = unsettledMap.get(bill.customerId) || { totalAmount: 0, billCount: 0 };
-          existing.totalAmount += bill.amount.toNumber();
+          const existing = unsettledMap.get(bill.customerId) || { totalAmountFen: 0, billCount: 0 };
+          existing.totalAmountFen += yuanToFen(bill.amount);
           existing.billCount += 1;
           unsettledMap.set(bill.customerId, existing);
         }
@@ -249,7 +250,7 @@ export class ToolExecutorService {
           const creditInfo = unsettledMap.get(customer.id);
           return {
             ...customer,
-            unsettledCreditAmount: creditInfo?.totalAmount || 0,
+            unsettledCreditAmount: creditInfo ? fenToYuan(creditInfo.totalAmountFen) : 0,
             unsettledCreditCount: creditInfo?.billCount || 0,
           };
         });
