@@ -8,10 +8,10 @@ const client = axios.create({
   },
 });
 
-// 请求拦截器：添加 JWT token
+// 请求拦截器：添加 JWT token（从 sessionStorage 读取）
 client.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,8 +29,8 @@ client.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_user');
       window.location.href = '/login';
     }
     return Promise.reject(error);

@@ -12,7 +12,7 @@ import Statistics from './pages/Statistics';
 
 // 受保护的路由：未登录则跳转到登录页
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('auth_token');
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -21,7 +21,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // 已登录时不能访问的路由（如登录页）
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('auth_token');
   if (token) {
     return <Navigate to="/" replace />;
   }

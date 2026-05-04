@@ -26,6 +26,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @ApiTags('bills')
 @ApiBearerAuth('JWT-auth')
 @Controller('bills')
+// 注意：所有金额字段在 API 响应中以"分"为单位返回（整数），前端显示时需除以 100
 export class BillsController {
   constructor(private readonly billsService: BillsService) {}
 

@@ -42,12 +42,19 @@ export const SettleBatchModal: React.FC<SettleBatchModalProps> = ({
   const { showError, showSuccess } = useToast();
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [loading, setLoading] = useState(false);
+  const [confirmStep, setConfirmStep] = useState(false); // 二次确认状态
 
   const totalAmount = selectedBills.reduce((sum, bill) => sum + Number(bill.amount), 0);
 
   const handleSettle = async () => {
     if (selectedBills.length === 0) {
       showError('请选择要结算的账单');
+      return;
+    }
+
+    // 二次确认：首次点击进入确认步骤，再次点击执行结算
+    if (!confirmStep) {
+      setConfirmStep(true);
       return;
     }
 
@@ -78,6 +85,7 @@ export const SettleBatchModal: React.FC<SettleBatchModalProps> = ({
   };
 
   const handleClose = () => {
+    setConfirmStep(false);
     setPaymentMethod('cash');
     onClose();
   };
@@ -160,12 +168,12 @@ export const SettleBatchModal: React.FC<SettleBatchModalProps> = ({
           <Text style={styles.cancelButtonText}>取消</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, styles.settleButton]}
+          style={[styles.button, styles.settleButton, confirmStep && styles.settleButtonConfirm]}
           onPress={handleSettle}
           disabled={loading}
         >
           <Text style={styles.settleButtonText}>
-            {loading ? '结算中...' : '确认结算'}
+            {loading ? '结算中...' : confirmStep ? '⚠️ 再次点击确认结算' : '确认结算'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -307,6 +315,9 @@ const createStyles = (colors: ThemeColors) => ({
     },
     settleButton: {
       backgroundColor: colors.success,
+    },
+    settleButtonConfirm: {
+      backgroundColor: colors.expense,
     },
     settleButtonText: {
       color: '#FFFFFF',
