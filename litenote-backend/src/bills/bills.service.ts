@@ -457,6 +457,8 @@ export class BillsService {
 
     const result = {
       // 总体统计（金额单位：元）
+      // fenToYuan(yuanToFen(...)) 并非冗余：将 Decimal 四舍五入到"分"精度再转回元，
+      // 确保金额精度到分（截断第3-4位小数），符合财务系统惯例
       totalIncome: fenToYuan(yuanToFen(totalIncome)),
       totalExpense: fenToYuan(yuanToFen(totalExpense)),
       balance: fenToYuan(yuanToFen(balance)),
