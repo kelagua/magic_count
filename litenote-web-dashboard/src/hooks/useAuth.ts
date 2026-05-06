@@ -36,7 +36,8 @@ export function useAuth() {
       try {
         const res = await authApi.login(data);
         if (res.success && res.data) {
-          secureStorage.setToken(res.data.access_token);
+          const token = res.data.token || res.data.access_token || '';
+          secureStorage.setToken(token);
           secureStorage.setUser(res.data.user);
           setUser(res.data.user);
           message.success('登录成功');
@@ -59,7 +60,8 @@ export function useAuth() {
       try {
         const res = await authApi.register(data);
         if (res.success && res.data) {
-          secureStorage.setToken(res.data.access_token);
+          const token = res.data.token || res.data.access_token || '';
+          secureStorage.setToken(token);
           secureStorage.setUser(res.data.user);
           setUser(res.data.user);
           message.success('注册成功');
