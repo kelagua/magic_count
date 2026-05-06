@@ -43,7 +43,7 @@ const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const userStr = localStorage.getItem('user');
+  const userStr = sessionStorage.getItem('auth_user');
   const user = userStr ? JSON.parse(userStr) : null;
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
@@ -51,8 +51,8 @@ const AppLayout: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_user');
     navigate('/login');
   };
 

@@ -5,9 +5,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: true,
+    allowedHosts: [
+      'idiocy-slimy-polar.ngrok-free.dev',
+      '.ngrok-free.dev',
+    ],
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3006',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

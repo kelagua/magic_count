@@ -551,6 +551,7 @@ export class BillsService {
 
   /**
    * 获取首页统计数据
+   * 农资商户核心指标：营业额（income+credit）、赊账（未结算）、结清（已结算）
    */
   async getHomeStatistics(userId: string) {
     const now = new Date();
@@ -559,24 +560,15 @@ export class BillsService {
 
     // 并行查询各项数据
     const [
-      unsettledCredits,
       monthIncome,
+      monthCredit,     // 本月赊账（未结算）
+      monthSettled,    // 本月结清（已结算）
       monthExpense,
+      unsettledCreditCount,
       recentBills,
       topDebtors,
     ] = await Promise.all([
-      // 1. 未结算赊账总额
-      this.prisma.bill.aggregate({
-        where: {
-          userId,
-          type: 'credit',
-          isSettled: false,
-        },
-        _sum: { amount: true },
-        _count: true,
-      }),
-
-      // 2. 本月收入
+      // 1. 本月现金收入（income）
       this.prisma.bill.aggregate({
         where: {
           userId,
@@ -586,7 +578,29 @@ export class BillsService {
         _sum: { amount: true },
       }),
 
-      // 3. 本月支出
+      // 2. 本月赊账（type=credit, isSettled=false, date 在本月）
+      this.prisma.bill.aggregate({
+        where: {
+          userId,
+          type: 'credit',
+          isSettled: false,
+          date: { gte: monthStart, lte: monthEnd },
+        },
+        _sum: { amount: true },
+      }),
+
+      // 3. 本月结清（type=credit, isSettled=true, settledAt 在本月）
+      this.prisma.bill.aggregate({
+        where: {
+          userId,
+          type: 'credit',
+          isSettled: true,
+          settledAt: { gte: monthStart, lte: monthEnd },
+        },
+        _sum: { amount: true },
+      }),
+
+      // 4. 本月支出（expense）
       this.prisma.bill.aggregate({
         where: {
           userId,
@@ -596,7 +610,16 @@ export class BillsService {
         _sum: { amount: true },
       }),
 
-      // 4. 最近5条账单
+      // 5. 未结算赊账笔数
+      this.prisma.bill.count({
+        where: {
+          userId,
+          type: 'credit',
+          isSettled: false,
+        },
+      }),
+
+      // 6. 最近5条账单
       this.prisma.bill.findMany({
         where: { userId },
         include: {
@@ -607,13 +630,20 @@ export class BillsService {
         take: 5,
       }),
 
-      // 5. 欠款最多的客户（未结算赊账）
+      // 7. 欠款最多的客户（未结算赊账）
       this.getTopDebtors(userId),
     ]);
 
+    // 营业额 = 现金收入 + 本月赊账（不论是否收到款，卖出就是营业额）
+    const totalRevenueFen = yuanToFen(monthIncome._sum.amount) + yuanToFen(monthCredit._sum.amount);
+
     return {
-      totalUnsettledCredits: fenToYuan(yuanToFen(unsettledCredits._sum.amount)),
-      unsettledCreditCount: unsettledCredits._count,
+      // 农资商户核心指标（金额单位：元）
+      totalRevenue: fenToYuan(totalRevenueFen),
+      monthlyCredit: fenToYuan(yuanToFen(monthCredit._sum.amount)),
+      monthlySettled: fenToYuan(yuanToFen(monthSettled._sum.amount)),
+      unsettledCreditCount,
+      // 保留供统计分析页使用
       totalIncome: fenToYuan(yuanToFen(monthIncome._sum.amount)),
       totalExpense: fenToYuan(yuanToFen(monthExpense._sum.amount)),
       recentBills,

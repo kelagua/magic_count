@@ -6,9 +6,11 @@ import {
   RiseOutlined,
   FallOutlined,
   CreditCardOutlined,
+  CheckCircleOutlined,
   PlusOutlined,
   FileTextOutlined,
   TeamOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import { billsApi } from '../api/bills';
 import type { HomeStatistics, Bill, TopDebtor } from '../types';
@@ -74,7 +76,7 @@ const Dashboard: React.FC = () => {
       width: 100,
       render: (amount: number, record: Bill) => (
         <span style={{ color: record.type === 'income' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#fa8c16', fontWeight: 600 }}>
-          {record.type === 'income' ? '+' : '-'}{Number(amount).toFixed(2)}
+          {record.type === 'expense' ? '-' : '+'}{Number(amount).toFixed(2)}
         </span>
       ),
     },
@@ -156,10 +158,10 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card hoverable>
             <Statistic
-              title="本月收入"
-              value={stats?.totalIncome || 0}
+              title="本月营业额"
+              value={stats?.totalRevenue || 0}
               precision={2}
-              prefix={<RiseOutlined />}
+              prefix={<ShoppingOutlined />}
               valueStyle={{ color: '#52c41a' }}
               suffix="元"
             />
@@ -168,11 +170,11 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card hoverable>
             <Statistic
-              title="本月支出"
-              value={stats?.totalExpense || 0}
+              title="本月赊账"
+              value={stats?.monthlyCredit || 0}
               precision={2}
-              prefix={<FallOutlined />}
-              valueStyle={{ color: '#ff4d4f' }}
+              prefix={<CreditCardOutlined />}
+              valueStyle={{ color: '#fa8c16' }}
               suffix="元"
             />
           </Card>
@@ -180,11 +182,11 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card hoverable>
             <Statistic
-              title="未结算赊账"
-              value={stats?.totalUnsettledCredits || 0}
+              title="本月结清"
+              value={stats?.monthlySettled || 0}
               precision={2}
-              prefix={<CreditCardOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: '#1890ff' }}
               suffix="元"
             />
           </Card>
