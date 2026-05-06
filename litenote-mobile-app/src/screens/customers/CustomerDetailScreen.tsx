@@ -252,7 +252,7 @@ export default function CustomerDetailScreen() {
                     styles.billAmount,
                     bill.type === 'income' ? styles.incomeAmount : styles.expenseAmount,
                   ]}>
-                    {bill.type === 'income' ? '+' : '-'}¥{Number(bill.amount).toFixed(2)}
+                    {bill.type === 'expense' ? '-' : '+'}¥{Number(bill.amount).toFixed(2)}
                   </Text>
                 </View>
               </View>
