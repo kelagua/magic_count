@@ -371,7 +371,7 @@ export default function DashboardScreen() {
                       styles.transactionAmount,
                       bill.type === 'income' ? styles.incomeAmount : bill.type === 'credit' ? styles.creditAmount : styles.expenseAmount,
                     ]}>
-                      {bill.type === 'income' ? '+' : '-'}¥{Number(bill.amount).toFixed(2)}
+                      {bill.type === 'expense' ? '-' : '+'}¥{Number(bill.amount).toFixed(2)}
                     </Text>
                   </View>
                 </BrutalPressable>

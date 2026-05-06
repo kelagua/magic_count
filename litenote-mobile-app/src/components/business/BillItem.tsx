@@ -51,8 +51,8 @@ const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
 
   // 根据类型选择金额显示
   const getAmountPrefix = () => {
-    if (isIncome) return '+';
-    return '-';
+    if (bill.type === 'expense') return '-';
+    return '+';
   };
 
   return (

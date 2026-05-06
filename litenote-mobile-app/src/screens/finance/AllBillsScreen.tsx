@@ -87,7 +87,7 @@ const AllBillsScreen: React.FC = () => {
   const calculateMonthTotal = (monthBills: BillData[]) => {
     return monthBills.reduce((total, bill) => {
       const amount = Number(bill.amount);
-      return total + (bill.type === 'income' ? amount : -amount);
+      return total + (bill.type === 'expense' ? -amount : amount);
     }, 0);
   };
 
