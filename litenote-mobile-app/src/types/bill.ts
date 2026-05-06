@@ -61,15 +61,22 @@ export interface SettleBatchDto {
 }
 
 export interface HomeStatistics {
-  totalUnsettled: number;
-  unsettledCount: number;
-  totalSettledThisMonth: number;
-  settledCountThisMonth: number;
+  // 农资商户核心指标
+  totalRevenue: number;        // 本月营业额（income + credit 合计）
+  monthlyCredit: number;       // 本月赊账（type=credit, isSettled=false）
+  monthlySettled: number;      // 本月结清（type=credit, isSettled=true）
+  unsettledCreditCount: number;// 未结算赊账笔数
+  // 保留供统计分析使用
+  totalIncome: number;         // 本月现金收入
+  totalExpense: number;        // 本月支出
+  // 详情
+  recentBills: BillData[];
   topDebtors: Array<{
     customerId: number;
     customerName: string;
-    totalUnsettled: number;
-    unsettledCount: number;
+    customerPhone?: string;
+    totalAmount: number;
+    billCount: number;
   }>;
 }
 
