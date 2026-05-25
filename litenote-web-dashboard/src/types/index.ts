@@ -28,8 +28,7 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-  access_token?: string;
-  token?: string;
+  token: string;
   user: User;
 }
 
@@ -214,15 +213,12 @@ export interface TopDebtor {
 }
 
 export interface HomeStatistics {
-  // 农资商户核心指标
-  totalRevenue: number;        // 本月营业额（income + credit 合计）
-  monthlyCredit: number;       // 本月赊账（type=credit, isSettled=false, date 在本月）
-  monthlySettled: number;      // 本月结清（type=credit, isSettled=true, settledAt 在本月）
-  unsettledCreditCount: number;// 未结算赊账笔数
-  // 保留供统计分析页使用
-  totalIncome: number;         // 本月现金收入
-  totalExpense: number;        // 本月支出
-  // 详情
+  totalUnsettledCredits: number;
+  unsettledCreditCount: number;
+  totalIncome: number;
+  totalExpense: number;
+  monthlyCredit: number;
+  monthlySettledCredits: number;
   recentBills: Bill[];
   topDebtors: TopDebtor[];
 }

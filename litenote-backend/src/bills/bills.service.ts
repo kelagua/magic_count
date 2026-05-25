@@ -13,7 +13,6 @@ import {
 } from './dto/bill.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PaginatedResponse } from '../common/interfaces/api-response.interface';
-import { v4 as uuidv4 } from 'uuid';
 import { yuanToFen, fenToYuan } from '../common/utils/currency';
 
 /**
@@ -35,7 +34,7 @@ export class BillsService {
    * 创建账单
    */
   async create(userId: string, createBillDto: CreateBillWithUserDto) {
-    const { amount, type, description, date, categoryId, customerId } = createBillDto;
+    const { amount, type, description, date, categoryId, customerId, relatedEntryIds } = createBillDto;
 
     // 验证用户存在（JWT guard 已确保认证，此处仅做数据完整性校验）
     const existingUser = await this.prisma.user.findUnique({
@@ -45,9 +44,19 @@ export class BillsService {
       throw new BadRequestException('用户不存在');
     }
 
-    // 赊账类型必须关联客户
-    if (type === 'credit' && !customerId) {
-      throw new BadRequestException('赊账类型必须关联客户');
+    // 入账类型必须关联客户
+    if (type === 'entry' && !customerId) {
+      throw new BadRequestException('入账类型必须关联客户');
+    }
+
+    // 结清类型必须关联客户且有关联的入账记录
+    if (type === 'settlement') {
+      if (!customerId) {
+        throw new BadRequestException('结清类型必须关联客户');
+      }
+      if (!relatedEntryIds || relatedEntryIds.length === 0) {
+        throw new BadRequestException('结清类型必须关联至少一个入账记录');
+      }
     }
 
     return this.prisma.bill.create({
@@ -59,6 +68,7 @@ export class BillsService {
         categoryId,
         customerId,
         userId,
+        relatedEntryIds,
       },
       include: {
         category: true,
@@ -236,9 +246,14 @@ export class BillsService {
     this.logger.log(`[getStatistics] 查询条件: ${JSON.stringify(where)}`);
 
     // 获取总体统计
-    const [incomeStats, expenseStats] = await Promise.all([
+    const [entryStats, settlementStats, expenseStats] = await Promise.all([
       this.prisma.bill.aggregate({
-        where: { ...where, type: 'income' },
+        where: { ...where, type: 'entry' },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      this.prisma.bill.aggregate({
+        where: { ...where, type: 'settlement' },
         _sum: { amount: true },
         _count: true,
       }),
@@ -249,7 +264,8 @@ export class BillsService {
       }),
     ]);
 
-    this.logger.log(`[getStatistics] 收入统计: count=${incomeStats._count}, sum=${incomeStats._sum.amount}`);
+    this.logger.log(`[getStatistics] 入账统计: count=${entryStats._count}, sum=${entryStats._sum.amount}`);
+    this.logger.log(`[getStatistics] 结清统计: count=${settlementStats._count}, sum=${settlementStats._sum.amount}`);
     this.logger.log(`[getStatistics] 支出统计: count=${expenseStats._count}, sum=${expenseStats._sum.amount}`);
 
     // 获取支出分类统计
@@ -260,10 +276,10 @@ export class BillsService {
       _count: true,
     });
 
-    // 获取收入分类统计
-    const incomeCategoryStats = await this.prisma.bill.groupBy({
+    // 获取入账分类统计（商品分类）
+    const entryCategoryStats = await this.prisma.bill.groupBy({
       by: ['categoryId'],
-      where: { ...where, type: 'income' },
+      where: { ...where, type: 'entry' },
       _sum: { amount: true },
       _count: true,
     });
@@ -271,7 +287,7 @@ export class BillsService {
     // 获取所有相关分类详细信息（过滤掉未分类的 null 值）
     const allCategoryIds = [
       ...expenseCategoryStats.map((stat) => stat.categoryId),
-      ...incomeCategoryStats.map((stat) => stat.categoryId),
+      ...entryCategoryStats.map((stat) => stat.categoryId),
     ].filter((id): id is number => id !== null);
     const categories = await this.prisma.category.findMany({
       where: { id: { in: allCategoryIds } },
@@ -301,16 +317,16 @@ export class BillsService {
       })
       .sort((a, b) => b.amount - a.amount);
 
-    // 组装收入分类统计数据（内部用分计算百分比，返回值转回元）
-    const totalIncomeAmount = incomeStats._sum.amount || new Decimal(0);
-    const totalIncomeAmountFen = yuanToFen(totalIncomeAmount);
-    const incomeCategoryData = incomeCategoryStats
+    // 组装入账分类统计数据（内部用分计算百分比，返回值转回元）
+    const totalEntryAmount = entryStats._sum.amount || new Decimal(0);
+    const totalEntryAmountFen = yuanToFen(totalEntryAmount);
+    const entryCategoryData = entryCategoryStats
       .map((stat) => {
         const category = categories.find((c) => c.id === stat.categoryId);
         const amountFen = yuanToFen(stat._sum.amount);
         const percentage =
-          totalIncomeAmountFen > 0
-            ? (amountFen / totalIncomeAmountFen) * 100
+          totalEntryAmountFen > 0
+            ? (amountFen / totalEntryAmountFen) * 100
             : 0;
 
         return {
@@ -355,17 +371,19 @@ export class BillsService {
       });
 
       // 在应用层按月份分组（使用分单位累加，避免浮点精度问题）
-      const monthlyMap = new Map<string, { incomeFen: number; expenseFen: number }>();
+      const monthlyMap = new Map<string, { entryFen: number; settlementFen: number; expenseFen: number }>();
 
       monthlyBills.forEach((bill) => {
         const date = new Date(bill.date);
         const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
         if (!monthlyMap.has(monthKey)) {
-          monthlyMap.set(monthKey, { incomeFen: 0, expenseFen: 0 });
+          monthlyMap.set(monthKey, { entryFen: 0, settlementFen: 0, expenseFen: 0 });
         }
         const monthData = monthlyMap.get(monthKey)!;
-        if (bill.type === 'income') {
-          monthData.incomeFen += yuanToFen(bill.amount);
+        if (bill.type === 'entry') {
+          monthData.entryFen += yuanToFen(bill.amount);
+        } else if (bill.type === 'settlement') {
+          monthData.settlementFen += yuanToFen(bill.amount);
         } else {
           monthData.expenseFen += yuanToFen(bill.amount);
         }
@@ -377,12 +395,13 @@ export class BillsService {
 
       while (currentMonth <= endMonth) {
         const monthKey = `${currentMonth.getFullYear()}-${currentMonth.getMonth() + 1}`;
-        const monthData = monthlyMap.get(monthKey) || { incomeFen: 0, expenseFen: 0 };
+        const monthData = monthlyMap.get(monthKey) || { entryFen: 0, settlementFen: 0, expenseFen: 0 };
 
         monthlyTrends.push({
           month: `${currentMonth.getMonth() + 1}月`,
           year: currentMonth.getFullYear(),
-          income: fenToYuan(monthData.incomeFen),
+          entry: fenToYuan(monthData.entryFen),
+          settlement: fenToYuan(monthData.settlementFen),
           expense: fenToYuan(monthData.expenseFen),
         });
 
@@ -414,16 +433,18 @@ export class BillsService {
         });
 
         // 在应用层按日期分组（使用分单位累加，避免浮点精度问题）
-        const dailyMap = new Map<string, { incomeFen: number; expenseFen: number }>();
+        const dailyMap = new Map<string, { entryFen: number; settlementFen: number; expenseFen: number }>();
 
         bills.forEach((bill) => {
           const dateKey = bill.date.toISOString().split('T')[0];
           if (!dailyMap.has(dateKey)) {
-            dailyMap.set(dateKey, { incomeFen: 0, expenseFen: 0 });
+            dailyMap.set(dateKey, { entryFen: 0, settlementFen: 0, expenseFen: 0 });
           }
           const dayData = dailyMap.get(dateKey)!;
-          if (bill.type === 'income') {
-            dayData.incomeFen += yuanToFen(bill.amount);
+          if (bill.type === 'entry') {
+            dayData.entryFen += yuanToFen(bill.amount);
+          } else if (bill.type === 'settlement') {
+            dayData.settlementFen += yuanToFen(bill.amount);
           } else {
             dayData.expenseFen += yuanToFen(bill.amount);
           }
@@ -434,11 +455,12 @@ export class BillsService {
           const dayDate = new Date(start);
           dayDate.setDate(start.getDate() + i);
           const dateKey = dayDate.toISOString().split('T')[0];
-          const dayData = dailyMap.get(dateKey) || { incomeFen: 0, expenseFen: 0 };
+          const dayData = dailyMap.get(dateKey) || { entryFen: 0, settlementFen: 0, expenseFen: 0 };
 
           dailyTrends.push({
             date: dateKey,
-            income: fenToYuan(dayData.incomeFen),
+            entry: fenToYuan(dayData.entryFen),
+            settlement: fenToYuan(dayData.settlementFen),
             expense: fenToYuan(dayData.expenseFen),
           });
         }
@@ -451,67 +473,90 @@ export class BillsService {
       this.logger.log(`[getStatistics] 未提供日期范围，跳过每日趋势计算`);
     }
 
-    const totalIncome = incomeStats._sum.amount || new Decimal(0);
+    const totalEntry = entryStats._sum.amount || new Decimal(0);
+    const totalSettlement = settlementStats._sum.amount || new Decimal(0);
     const totalExpense = expenseStats._sum.amount || new Decimal(0);
-    const balance = totalIncome.minus(totalExpense);
 
     const result = {
       // 总体统计（金额单位：元）
       // fenToYuan(yuanToFen(...)) 并非冗余：将 Decimal 四舍五入到"分"精度再转回元，
       // 确保金额精度到分（截断第3-4位小数），符合财务系统惯例
-      totalIncome: fenToYuan(yuanToFen(totalIncome)),
+      totalEntry: fenToYuan(yuanToFen(totalEntry)),
+      totalSettlement: fenToYuan(yuanToFen(totalSettlement)),
       totalExpense: fenToYuan(yuanToFen(totalExpense)),
-      balance: fenToYuan(yuanToFen(balance)),
-      incomeCount: incomeStats._count,
+      entryCount: entryStats._count,
+      settlementCount: settlementStats._count,
       expenseCount: expenseStats._count,
       // 分类统计（用于饼图和分类占比）
       expenseCategoryStats: expenseCategoryData,
-      incomeCategoryStats: incomeCategoryData,
+      entryCategoryStats: entryCategoryData,
       // 月度趋势（用于折线图）
       monthlyTrends,
       // 每日趋势（用于日趋势图）
       dailyTrends,
     };
 
-    this.logger.log(`[getStatistics] 统计完成 - 收入: ${result.totalIncome}, 支出: ${result.totalExpense}, 每日趋势: ${dailyTrends.length}条`);
+    this.logger.log(`[getStatistics] 统计完成 - 入账: ${result.totalEntry}, 结清: ${result.totalSettlement}, 支出: ${result.totalExpense}, 每日趋势: ${dailyTrends.length}条`);
 
     return result;
   }
 
   /**
-   * 批量结算赊账
+   * 批量结清入账
    */
   async settleBatch(userId: string, dto: SettleBatchDto) {
     const { billIds, paymentMethod } = dto;
-    const settledBatchId = uuidv4().substring(0, 8);
     const now = new Date();
 
-    // 使用事务确保原子性：要么全部结算成功，要么全部回滚
+    // 使用事务确保原子性：创建 settlement 记录 + 更新 entry 的 isSettled
     return this.prisma.$transaction(async (tx) => {
-      // 验证所有账单都属于该用户且是赊账类型（在事务内查询，防止并发修改）
+      // 验证所有账单都属于该用户且是未结清的 entry 类型（在事务内查询，防止并发修改）
       const bills = await tx.bill.findMany({
         where: {
           id: { in: billIds },
           userId,
-          type: 'credit',
+          type: 'entry',
           isSettled: false,
         },
       });
 
       if (bills.length === 0) {
-        throw new BadRequestException('没有可结算的赊账记录');
+        throw new BadRequestException('没有可结清的入账记录');
       }
 
       if (bills.length !== billIds.length) {
         const foundIds = bills.map((b) => b.id);
         const invalidIds = billIds.filter((id) => !foundIds.includes(id));
         this.logger.warn(
-          `部分账单不可结算: ${invalidIds.join(', ')}（可能不存在、非赊账类型或已结算）`,
+          `部分账单不可结清: ${invalidIds.join(', ')}（可能不存在、非入账类型或已结清）`,
         );
       }
 
-      // 批量更新（事务内）
       const settledBillIds = bills.map((b) => b.id);
+
+      // 使用整数分累加，再转回元返回
+      const totalAmountFen = bills.reduce(
+        (sum, bill) => sum + yuanToFen(bill.amount),
+        0,
+      );
+
+      // 创建 settlement 记录
+      const settlement = await tx.bill.create({
+        data: {
+          amount: new Decimal(fenToYuan(totalAmountFen)),
+          type: 'settlement',
+          description: paymentMethod ? `结清 ${settledBillIds.length} 笔入账（${paymentMethod}）` : `结清 ${settledBillIds.length} 笔入账`,
+          date: now,
+          customerId: bills[0].customerId,
+          userId,
+          relatedEntryIds: settledBillIds,
+        },
+        include: {
+          customer: true,
+        },
+      });
+
+      // 批量更新对应 entry 的 isSettled=true, settledAt=now
       await tx.bill.updateMany({
         where: {
           id: { in: settledBillIds },
@@ -519,39 +564,19 @@ export class BillsService {
         data: {
           isSettled: true,
           settledAt: now,
-          settledBatchId,
         },
       });
-
-      // 返回结算后的账单详情
-      const settledBills = await tx.bill.findMany({
-        where: { id: { in: settledBillIds } },
-        include: {
-          category: true,
-          customer: true,
-        },
-      });
-
-      // 使用整数分累加，再转回元返回
-      const totalAmountFen = settledBills.reduce(
-        (sum, bill) => sum + yuanToFen(bill.amount),
-        0,
-      );
 
       return {
-        settledBatchId,
-        settledAt: now,
-        paymentMethod: paymentMethod || null,
-        settledCount: settledBills.length,
+        settlement,
+        settledCount: settledBillIds.length,
         totalAmount: fenToYuan(totalAmountFen),
-        bills: settledBills,
       };
     });
   }
 
   /**
    * 获取首页统计数据
-   * 农资商户核心指标：营业额（income+credit）、赊账（未结算）、结清（已结算）
    */
   async getHomeStatistics(userId: string) {
     const now = new Date();
@@ -560,47 +585,46 @@ export class BillsService {
 
     // 并行查询各项数据
     const [
-      monthIncome,
-      monthCredit,     // 本月赊账（未结算）
-      monthSettled,    // 本月结清（已结算）
+      unsettledEntries,
+      monthEntry,
+      monthSettlement,
       monthExpense,
-      unsettledCreditCount,
+      totalRevenue,
       recentBills,
       topDebtors,
     ] = await Promise.all([
-      // 1. 本月现金收入（income）
+      // 1. 未结清入账总额（全部，不限月份）
       this.prisma.bill.aggregate({
         where: {
           userId,
-          type: 'income',
-          date: { gte: monthStart, lte: monthEnd },
-        },
-        _sum: { amount: true },
-      }),
-
-      // 2. 本月赊账（type=credit, isSettled=false, date 在本月）
-      this.prisma.bill.aggregate({
-        where: {
-          userId,
-          type: 'credit',
+          type: 'entry',
           isSettled: false,
+        },
+        _sum: { amount: true },
+        _count: true,
+      }),
+
+      // 2. 本月入账（新增的入账金额）
+      this.prisma.bill.aggregate({
+        where: {
+          userId,
+          type: 'entry',
           date: { gte: monthStart, lte: monthEnd },
         },
         _sum: { amount: true },
       }),
 
-      // 3. 本月结清（type=credit, isSettled=true, settledAt 在本月）
+      // 3. 本月结清（settlement 类型，date 在本月）
       this.prisma.bill.aggregate({
         where: {
           userId,
-          type: 'credit',
-          isSettled: true,
-          settledAt: { gte: monthStart, lte: monthEnd },
+          type: 'settlement',
+          date: { gte: monthStart, lte: monthEnd },
         },
         _sum: { amount: true },
       }),
 
-      // 4. 本月支出（expense）
+      // 4. 本月支出
       this.prisma.bill.aggregate({
         where: {
           userId,
@@ -610,13 +634,14 @@ export class BillsService {
         _sum: { amount: true },
       }),
 
-      // 5. 未结算赊账笔数
-      this.prisma.bill.count({
+      // 5. 本月营业额（所有 entry 合计，包括已结清和未结清）
+      this.prisma.bill.aggregate({
         where: {
           userId,
-          type: 'credit',
-          isSettled: false,
+          type: 'entry',
+          date: { gte: monthStart, lte: monthEnd },
         },
+        _sum: { amount: true },
       }),
 
       // 6. 最近5条账单
@@ -634,18 +659,13 @@ export class BillsService {
       this.getTopDebtors(userId),
     ]);
 
-    // 营业额 = 现金收入 + 本月赊账（不论是否收到款，卖出就是营业额）
-    const totalRevenueFen = yuanToFen(monthIncome._sum.amount) + yuanToFen(monthCredit._sum.amount);
-
     return {
-      // 农资商户核心指标（金额单位：元）
-      totalRevenue: fenToYuan(totalRevenueFen),
-      monthlyCredit: fenToYuan(yuanToFen(monthCredit._sum.amount)),
-      monthlySettled: fenToYuan(yuanToFen(monthSettled._sum.amount)),
-      unsettledCreditCount,
-      // 保留供统计分析页使用
-      totalIncome: fenToYuan(yuanToFen(monthIncome._sum.amount)),
-      totalExpense: fenToYuan(yuanToFen(monthExpense._sum.amount)),
+      totalRevenue: fenToYuan(yuanToFen(totalRevenue._sum.amount)), // 本月营业额（entry 合计）
+      monthlyEntry: fenToYuan(yuanToFen(monthEntry._sum.amount)),    // 本月入账
+      monthlySettled: fenToYuan(yuanToFen(monthSettlement._sum.amount)), // 本月结清
+      monthlyExpense: fenToYuan(yuanToFen(monthExpense._sum.amount)), // 本月支出
+      unsettledAmount: fenToYuan(yuanToFen(unsettledEntries._sum.amount)), // 未结清总额
+      unsettledCount: unsettledEntries._count, // 未结清笔数
       recentBills,
       topDebtors,
     };
@@ -655,11 +675,11 @@ export class BillsService {
    * 获取欠款最多的客户列表
    */
   private async getTopDebtors(userId: string, limit: number = 5) {
-    // 查询未结算的赊账，按客户分组
+    // 查询未结清的入账，按客户分组
     const unsettledBills = await this.prisma.bill.findMany({
       where: {
         userId,
-        type: 'credit',
+        type: 'entry',
         isSettled: false,
         customerId: { not: null },
       },

@@ -17,9 +17,9 @@ import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum BillType {
-  INCOME = 'income',
-  EXPENSE = 'expense',
-  CREDIT = 'credit',
+  ENTRY = 'entry',           // 入账（卖出商品，应收账款）
+  SETTLEMENT = 'settlement', // 结清（客户还款）
+  EXPENSE = 'expense',       // 支出（店铺支出）
 }
 
 export class CreateBillDto {
@@ -36,15 +36,15 @@ export class CreateBillDto {
 
   @ApiProperty({
     description: '账单类型',
-    example: 'expense',
-    enum: ['income', 'expense', 'credit'],
+    example: 'entry',
+    enum: ['entry', 'settlement', 'expense'],
   })
-  @IsEnum(BillType, { message: '类型必须是income、expense或credit' })
+  @IsEnum(BillType, { message: '类型必须是entry、settlement或expense' })
   type: BillType;
 
   @ApiProperty({
     description: '账单描述',
-    example: '午餐费用',
+    example: '化肥 50kg',
     required: false,
     maxLength: 500,
   })
@@ -62,7 +62,7 @@ export class CreateBillDto {
   date: string;
 
   @ApiProperty({
-    description: '分类ID',
+    description: '分类ID（entry/expense时可选）',
     example: 1,
     required: false,
   })
@@ -71,13 +71,23 @@ export class CreateBillDto {
   categoryId?: number;
 
   @ApiProperty({
-    description: '客户ID（赊账时关联客户）',
+    description: '客户ID（entry/settlement时必填）',
     example: 1,
     required: false,
   })
   @IsOptional()
   @IsNumber({}, { message: '客户ID必须是数字' })
   customerId?: number;
+
+  @ApiProperty({
+    description: '关联的入账ID数组（settlement时必填）',
+    example: [1, 2, 3],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray({ message: 'relatedEntryIds必须是数组' })
+  @IsNumber({}, { each: true, message: '入账ID必须是数字' })
+  relatedEntryIds?: number[];
 }
 
 // 内部使用的完整DTO，包含userId
@@ -95,16 +105,16 @@ export class UpdateBillDto {
 
   @ApiProperty({
     description: '账单类型',
-    enum: ['income', 'expense', 'credit'],
+    enum: ['entry', 'settlement', 'expense'],
     required: false,
   })
   @IsOptional()
-  @IsEnum(BillType, { message: '类型必须是income、expense或credit' })
+  @IsEnum(BillType, { message: '类型必须是entry、settlement或expense' })
   type?: BillType;
 
   @ApiProperty({
     description: '账单描述',
-    example: '午餐费用',
+    example: '化肥 50kg',
     required: false,
   })
   @IsOptional()
@@ -115,25 +125,40 @@ export class UpdateBillDto {
   @ApiProperty({
     description: '账单日期',
     example: '2024-01-15',
+    format: 'date',
     required: false,
   })
   @IsOptional()
   @IsDateString({}, { message: '日期格式不正确' })
   date?: string;
 
-  @ApiProperty({ description: '分类ID', example: 1, required: false })
+  @ApiProperty({
+    description: '分类ID（entry/expense时可选）',
+    example: 1,
+    required: false,
+  })
   @IsOptional()
   @IsNumber({}, { message: '分类ID必须是数字' })
   categoryId?: number;
 
   @ApiProperty({
-    description: '客户ID（赊账时关联客户）',
+    description: '客户ID（entry/settlement时必填）',
     example: 1,
     required: false,
   })
   @IsOptional()
   @IsNumber({}, { message: '客户ID必须是数字' })
   customerId?: number;
+
+  @ApiProperty({
+    description: '关联的入账ID数组（settlement时必填）',
+    example: [1, 2, 3],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray({ message: 'relatedEntryIds必须是数组' })
+  @IsNumber({}, { each: true, message: '入账ID必须是数字' })
+  relatedEntryIds?: number[];
 }
 
 export class BillQueryDto {
@@ -154,11 +179,11 @@ export class BillQueryDto {
 
   @ApiProperty({
     description: '账单类型',
-    enum: ['income', 'expense', 'credit'],
+    enum: ['entry', 'settlement', 'expense'],
     required: false,
   })
   @IsOptional()
-  @IsEnum(BillType, { message: '类型必须是income、expense或credit' })
+  @IsEnum(BillType, { message: '类型必须是entry、settlement或expense' })
   type?: BillType;
 
   @ApiProperty({ description: '分类ID', example: 1, required: false })
@@ -178,7 +203,7 @@ export class BillQueryDto {
   customerId?: number;
 
   @ApiProperty({
-    description: '是否已结算（赊账用）',
+    description: '是否已结清（仅entry类型有意义）',
     example: false,
     required: false,
   })
@@ -232,7 +257,7 @@ export class BillQueryDto {
 
 export class SettleBatchDto {
   @ApiProperty({
-    description: '要结算的账单ID列表',
+    description: '要结清的入账ID列表（entry类型）',
     example: [1, 2, 3],
   })
   @IsArray({ message: 'billIds必须是数组' })
@@ -241,7 +266,7 @@ export class SettleBatchDto {
   billIds: number[];
 
   @ApiProperty({
-    description: '还款方式',
+    description: '还款方式：现金/微信转账/银行转账/支付宝/其他',
     example: '现金',
     required: false,
   })

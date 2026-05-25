@@ -185,7 +185,7 @@ export default function DashboardScreen() {
         </View>
         <View style={styles.overviewContent}>
           <Text style={styles.overviewLabel}>本月营业额</Text>
-          <Text style={styles.overviewBalance}>¥ {(homeStats?.totalRevenue || 0).toFixed(2)}</Text>
+          <Text style={styles.overviewBalance}>¥ {((homeStats?.totalIncome || 0) + (homeStats?.totalExpense || 0)).toFixed(2)}</Text>
 
           <View style={styles.overviewDivider} />
 
@@ -205,7 +205,7 @@ export default function DashboardScreen() {
               </View>
               <View>
                 <Text style={styles.statLabel}>本月结清</Text>
-                <Text style={styles.statValue}>¥ {(homeStats?.monthlySettled || 0).toFixed(2)}</Text>
+                <Text style={styles.statValue}>¥ {(homeStats?.monthlySettledCredits || 0).toFixed(2)}</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -213,7 +213,7 @@ export default function DashboardScreen() {
       </TouchableOpacity>
 
       {/* ========== 赊账概览 ========== */}
-      {homeStats && (homeStats.monthlyCredit > 0 || homeStats.unsettledCreditCount > 0) && (
+      {homeStats && (homeStats.totalUnsettledCredits > 0 || homeStats.unsettledCreditCount > 0) && (
         <TouchableOpacity
           style={styles.creditOverviewCard}
           onPress={handleViewUnsettledCredits}
@@ -232,14 +232,14 @@ export default function DashboardScreen() {
           <View style={styles.creditOverviewStats}>
             <View style={styles.creditStatBlock}>
               <Text style={styles.creditStatLabel}>未结清总额</Text>
-              <Text style={styles.creditStatAmount}>¥ {homeStats.monthlyCredit.toFixed(2)}</Text>
+              <Text style={styles.creditStatAmount}>¥ {homeStats.totalUnsettledCredits.toFixed(2)}</Text>
             </View>
-            {homeStats.monthlySettled > 0 && (
+            {homeStats.monthlySettledCredits > 0 && (
               <>
                 <View style={styles.creditStatDivider} />
                 <View style={styles.creditStatBlock}>
                   <Text style={styles.creditStatLabel}>本月已结清</Text>
-                  <Text style={styles.creditStatSettled}>¥ {homeStats.monthlySettled.toFixed(2)}</Text>
+                  <Text style={styles.creditStatSettled}>¥ {homeStats.monthlySettledCredits.toFixed(2)}</Text>
                 </View>
               </>
             )}

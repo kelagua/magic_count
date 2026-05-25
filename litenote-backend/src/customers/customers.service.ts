@@ -148,10 +148,10 @@ export class CustomersService {
   }
 
   /**
-   * 获取未结算的赊账记录
+   * 获取未结清的入账记录
    */
   async getUnsettledCredits(userId: string, customerId?: number) {
-    const where: any = { userId, type: 'credit', isSettled: false };
+    const where: any = { userId, type: 'entry', isSettled: false };
 
     if (customerId) {
       where.customerId = customerId;

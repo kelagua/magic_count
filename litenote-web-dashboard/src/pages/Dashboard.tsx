@@ -6,11 +6,9 @@ import {
   RiseOutlined,
   FallOutlined,
   CreditCardOutlined,
-  CheckCircleOutlined,
   PlusOutlined,
   FileTextOutlined,
   TeamOutlined,
-  ShoppingOutlined,
 } from '@ant-design/icons';
 import { billsApi } from '../api/bills';
 import type { HomeStatistics, Bill, TopDebtor } from '../types';
@@ -159,9 +157,9 @@ const Dashboard: React.FC = () => {
           <Card hoverable>
             <Statistic
               title="本月营业额"
-              value={stats?.totalRevenue || 0}
+              value={(stats?.totalIncome || 0) + (stats?.totalExpense || 0)}
               precision={2}
-              prefix={<ShoppingOutlined />}
+              prefix={<RiseOutlined />}
               valueStyle={{ color: '#52c41a' }}
               suffix="元"
             />
@@ -183,9 +181,9 @@ const Dashboard: React.FC = () => {
           <Card hoverable>
             <Statistic
               title="本月结清"
-              value={stats?.monthlySettled || 0}
+              value={stats?.monthlySettledCredits || 0}
               precision={2}
-              prefix={<CheckCircleOutlined />}
+              prefix={<DollarOutlined />}
               valueStyle={{ color: '#1890ff' }}
               suffix="元"
             />
@@ -194,11 +192,12 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card hoverable>
             <Statistic
-              title="赊账笔数"
-              value={stats?.unsettledCreditCount || 0}
-              prefix={<DollarOutlined />}
+              title="未结算赊账"
+              value={stats?.totalUnsettledCredits || 0}
+              precision={2}
+              prefix={<CreditCardOutlined />}
               valueStyle={{ color: '#722ed1' }}
-              suffix="笔"
+              suffix="元"
             />
           </Card>
         </Col>
