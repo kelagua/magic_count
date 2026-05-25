@@ -238,7 +238,7 @@ const Bills: React.FC = () => {
       sorter: true,
       render: (amount: number, record: Bill) => (
         <span style={{ color: record.type === 'income' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#fa8c16', fontWeight: 600 }}>
-          {record.type === 'income' ? '+' : '-'}{Number(amount).toFixed(2)}
+          {record.type === 'expense' ? '-' : '+'}{Number(amount).toFixed(2)}
         </span>
       ),
     },

@@ -61,9 +61,6 @@ export default function DashboardScreen() {
   const styles = useStyles(createStyles);
   const {
     recentBills,
-    monthIncome,
-    monthExpense,
-    monthBalance,
     isLoading,
     isFetching,
     refetch,
@@ -187,8 +184,8 @@ export default function DashboardScreen() {
           <Text style={styles.stickerText}>⚡</Text>
         </View>
         <View style={styles.overviewContent}>
-          <Text style={styles.overviewLabel}>本月往来差额</Text>
-          <Text style={styles.overviewBalance}>¥ {monthBalance.toFixed(2)}</Text>
+          <Text style={styles.overviewLabel}>本月营业额</Text>
+          <Text style={styles.overviewBalance}>¥ {((homeStats?.totalIncome || 0) + (homeStats?.totalExpense || 0)).toFixed(2)}</Text>
 
           <View style={styles.overviewDivider} />
 
@@ -199,7 +196,7 @@ export default function DashboardScreen() {
               </View>
               <View>
                 <Text style={styles.statLabel}>本月赊账</Text>
-                <Text style={styles.statValue}>¥ {monthExpense.toFixed(2)}</Text>
+                <Text style={styles.statValue}>¥ {(homeStats?.monthlyCredit || 0).toFixed(2)}</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.statBlockGreen} onPress={handleViewIncome}>
@@ -207,8 +204,8 @@ export default function DashboardScreen() {
                 <Text style={styles.statIcon}>↗</Text>
               </View>
               <View>
-                <Text style={styles.statLabel}>本月回款</Text>
-                <Text style={styles.statValue}>¥ {monthIncome.toFixed(2)}</Text>
+                <Text style={styles.statLabel}>本月结清</Text>
+                <Text style={styles.statValue}>¥ {(homeStats?.monthlySettledCredits || 0).toFixed(2)}</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -216,7 +213,7 @@ export default function DashboardScreen() {
       </TouchableOpacity>
 
       {/* ========== 赊账概览 ========== */}
-      {homeStats && (homeStats.totalUnsettled > 0 || homeStats.unsettledCount > 0) && (
+      {homeStats && (homeStats.totalUnsettledCredits > 0 || homeStats.unsettledCreditCount > 0) && (
         <TouchableOpacity
           style={styles.creditOverviewCard}
           onPress={handleViewUnsettledCredits}
@@ -228,21 +225,21 @@ export default function DashboardScreen() {
               <Text style={styles.creditOverviewTitle}>赊账概览</Text>
             </View>
             <View style={styles.creditBadgeWarning}>
-              <Text style={styles.creditBadgeText}>{homeStats.unsettledCount}笔未结清</Text>
+              <Text style={styles.creditBadgeText}>{homeStats.unsettledCreditCount}笔未结清</Text>
             </View>
           </View>
 
           <View style={styles.creditOverviewStats}>
             <View style={styles.creditStatBlock}>
               <Text style={styles.creditStatLabel}>未结清总额</Text>
-              <Text style={styles.creditStatAmount}>¥ {homeStats.totalUnsettled.toFixed(2)}</Text>
+              <Text style={styles.creditStatAmount}>¥ {homeStats.totalUnsettledCredits.toFixed(2)}</Text>
             </View>
-            {homeStats.totalSettledThisMonth > 0 && (
+            {homeStats.monthlySettledCredits > 0 && (
               <>
                 <View style={styles.creditStatDivider} />
                 <View style={styles.creditStatBlock}>
                   <Text style={styles.creditStatLabel}>本月已结清</Text>
-                  <Text style={styles.creditStatSettled}>¥ {homeStats.totalSettledThisMonth.toFixed(2)}</Text>
+                  <Text style={styles.creditStatSettled}>¥ {homeStats.monthlySettledCredits.toFixed(2)}</Text>
                 </View>
               </>
             )}
@@ -261,9 +258,9 @@ export default function DashboardScreen() {
                   </View>
                   <View style={styles.debtorInfo}>
                     <Text style={styles.debtorName}>{debtor.customerName}</Text>
-                    <Text style={styles.debtorCount}>{debtor.unsettledCount}笔赊账</Text>
+                    <Text style={styles.debtorCount}>{debtor.billCount}笔赊账</Text>
                   </View>
-                  <Text style={styles.debtorAmount}>¥ {debtor.totalUnsettled.toFixed(2)}</Text>
+                  <Text style={styles.debtorAmount}>¥ {debtor.totalAmount.toFixed(2)}</Text>
                 </View>
               ))}
             </View>
@@ -371,7 +368,7 @@ export default function DashboardScreen() {
                       styles.transactionAmount,
                       bill.type === 'income' ? styles.incomeAmount : bill.type === 'credit' ? styles.creditAmount : styles.expenseAmount,
                     ]}>
-                      {bill.type === 'income' ? '+' : '-'}¥{Number(bill.amount).toFixed(2)}
+                      {bill.type === 'expense' ? '-' : '+'}¥{Number(bill.amount).toFixed(2)}
                     </Text>
                   </View>
                 </BrutalPressable>

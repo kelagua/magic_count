@@ -61,15 +61,19 @@ export interface SettleBatchDto {
 }
 
 export interface HomeStatistics {
-  totalUnsettled: number;
-  unsettledCount: number;
-  totalSettledThisMonth: number;
-  settledCountThisMonth: number;
+  totalUnsettledCredits: number;
+  unsettledCreditCount: number;
+  totalIncome: number;
+  totalExpense: number;
+  monthlyCredit: number;
+  monthlySettledCredits: number;
+  recentBills: BillData[];
   topDebtors: Array<{
     customerId: number;
     customerName: string;
-    totalUnsettled: number;
-    unsettledCount: number;
+    customerPhone?: string | null;
+    totalAmount: number;
+    billCount: number;
   }>;
 }
 

@@ -62,7 +62,7 @@ model AIModelConfig {
 model Category {
   id          Int      @id @default(autoincrement())                            // 分类ID，自增主键
   name        String   @db.VarChar(100)                                         // 分类名称，如"餐饮"、"交通"等
-  type        String   @db.VarChar(10)                                          // 分类类型：'income'(收入) 或 'expense'(支出)
+  type        String   @db.VarChar(10)   // 分类类型：'entry'(入账/商品分类) 或 'expense'(支出分类)
   icon        String?  @db.VarChar(10)                                          // 分类图标，emoji表情，可选
   color       String?  @db.VarChar(20)                                          // 分类颜色，十六进制色值，可选
   isDefault   Boolean  @default(false) @map("is_default")                       // 是否为系统默认分类
@@ -83,25 +83,25 @@ model Category {
 }
 
 model Bill {
-  id          Int       @id @default(autoincrement())                            // 账单ID，自增主键
-  amount      Decimal   @db.Decimal(15, 4)                                       // 金额，支持15位数字，4位小数
-  type        String    @db.VarChar(10)                                          // 账单类型：'income'(收入)、'expense'(支出) 或 'credit'(赊账)
-  description String?   @db.Text                                                 // 账单描述/备注，可选
-  date        DateTime  @db.Date                                                 // 账单日期
-  time        DateTime? @db.Timestamptz(6)                                       // 具体时间，可选
-  categoryId  Int?      @map("category_id")                                      // 关联分类ID，可选
-  accountId   Int?      @map("account_id")                                       // 关联账户ID，可选
-  customerId  Int?      @map("customer_id")                                      // 关联客户ID，可选（赊账时关联客户）
-  userId      String    @map("user_id") @db.Uuid                                 // 所属用户ID，必填
-  isSettled   Boolean   @default(false) @map("is_settled")                       // 是否已结算（赊账用）
-  settledAt   DateTime? @map("settled_at") @db.Timestamptz(6)                   // 结算时间，可选
-  settledBatchId String? @map("settled_batch_id") @db.VarChar(50)                // 批量结算批次ID，可选
-  tags        String[]  @default([])                                             // 标签数组
-  notes       String?   @db.Text                                                 // 备注，可选
-  receiptUrl  String?   @map("receipt_url") @db.Text                             // 收据图片URL，可选
-  source      String    @default("manual") @db.VarChar(20)                       // 来源：manual/voice/ocr/text/notification
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)   // 创建时间
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)        // 更新时间
+  id               Int       @id @default(autoincrement())                            // 账单ID，自增主键
+  amount           Decimal   @db.Decimal(15, 4)                                       // 金额，支持15位数字，4位小数
+  type             String    @db.VarChar(10)                                          // 账单类型：'entry'(入账)、'settlement'(结清) 或 'expense'(支出)
+  description      String?   @db.Text                                                 // 账单描述/备注，可选
+  date             DateTime  @db.Date                                                 // 账单日期
+  time             DateTime? @db.Timestamptz(6)                                       // 具体时间，可选
+  categoryId       Int?      @map("category_id")                                      // 关联分类ID，可选（entry/expense时使用）
+  accountId        Int?      @map("account_id")                                       // 关联账户ID，可选
+  customerId       Int?      @map("customer_id")                                      // 关联客户ID，可选（entry/settlement时使用）
+  userId           String    @map("user_id") @db.Uuid                                 // 所属用户ID，必填
+  isSettled        Boolean   @default(false) @map("is_settled")                       // 是否已结清（仅entry类型有意义）
+  settledAt        DateTime? @map("settled_at") @db.Timestamptz(6)                   // 结清时间，可选
+  relatedEntryIds Int[]     @default([]) @map("related_entry_ids")                   // 关联的入账ID数组（settlement类型使用）
+  tags             String[]  @default([])                                             // 标签数组
+  notes            String?   @db.Text                                                 // 备注，可选
+  receiptUrl       String?   @map("receipt_url") @db.Text                             // 收据图片URL，可选
+  source           String    @default("manual") @db.VarChar(20)                       // 来源：manual/voice/ocr/text/notification
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)   // 创建时间
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)        // 更新时间
 
   // 关联关系
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)    // 关联用户，级联删除
@@ -115,8 +115,7 @@ model Bill {
   @@index([accountId])       // 索引：账户ID
   @@index([source])          // 索引：来源
   @@index([customerId])      // 索引：客户ID
-  @@index([isSettled])       // 索引：是否已结算
-  @@index([settledBatchId])  // 索引：结算批次ID
+  @@index([isSettled])       // 索引：是否已结清
   @@map("bills")
   @@schema("public")
 }

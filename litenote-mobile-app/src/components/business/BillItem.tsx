@@ -49,10 +49,10 @@ const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
     return styles._colors.accent;
   };
 
-  // 根据类型选择金额显示
+  // 根据类型选择金额显示（只有支出显示负号，收入和赊账显示正号）
   const getAmountPrefix = () => {
-    if (isIncome) return '+';
-    return '-';
+    if (bill.type === 'expense') return '-';
+    return '+';
   };
 
   return (

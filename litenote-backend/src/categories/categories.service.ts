@@ -211,38 +211,38 @@ export class CategoriesService {
         sortOrder: 8,
       },
 
-      // 收入分类
+      // 入账/商品分类
       {
         name: '客户回款',
-        type: 'income',
+        type: 'entry',
         icon: '💰',
         color: '#58D68D',
         sortOrder: 1,
       },
       {
         name: '现金收款',
-        type: 'income',
+        type: 'entry',
         icon: '💵',
         color: '#85C1E9',
         sortOrder: 2,
       },
       {
         name: '其他收款',
-        type: 'income',
+        type: 'entry',
         icon: '📈',
         color: '#F8C471',
         sortOrder: 3,
       },
       {
         name: '兼职',
-        type: 'income',
+        type: 'entry',
         icon: '💼',
         color: '#BB8FCE',
         sortOrder: 4,
       },
       {
         name: '其他',
-        type: 'income',
+        type: 'entry',
         icon: '💸',
         color: '#82E0AA',
         sortOrder: 5,

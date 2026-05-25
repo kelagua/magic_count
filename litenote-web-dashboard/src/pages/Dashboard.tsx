@@ -74,7 +74,7 @@ const Dashboard: React.FC = () => {
       width: 100,
       render: (amount: number, record: Bill) => (
         <span style={{ color: record.type === 'income' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#fa8c16', fontWeight: 600 }}>
-          {record.type === 'income' ? '+' : '-'}{Number(amount).toFixed(2)}
+          {record.type === 'expense' ? '-' : '+'}{Number(amount).toFixed(2)}
         </span>
       ),
     },
@@ -156,8 +156,8 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card hoverable>
             <Statistic
-              title="本月收入"
-              value={stats?.totalIncome || 0}
+              title="本月营业额"
+              value={(stats?.totalIncome || 0) + (stats?.totalExpense || 0)}
               precision={2}
               prefix={<RiseOutlined />}
               valueStyle={{ color: '#52c41a' }}
@@ -168,11 +168,23 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card hoverable>
             <Statistic
-              title="本月支出"
-              value={stats?.totalExpense || 0}
+              title="本月赊账"
+              value={stats?.monthlyCredit || 0}
               precision={2}
-              prefix={<FallOutlined />}
-              valueStyle={{ color: '#ff4d4f' }}
+              prefix={<CreditCardOutlined />}
+              valueStyle={{ color: '#fa8c16' }}
+              suffix="元"
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="本月结清"
+              value={stats?.monthlySettledCredits || 0}
+              precision={2}
+              prefix={<DollarOutlined />}
+              valueStyle={{ color: '#1890ff' }}
               suffix="元"
             />
           </Card>
@@ -184,19 +196,8 @@ const Dashboard: React.FC = () => {
               value={stats?.totalUnsettledCredits || 0}
               precision={2}
               prefix={<CreditCardOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-              suffix="元"
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="赊账笔数"
-              value={stats?.unsettledCreditCount || 0}
-              prefix={<DollarOutlined />}
               valueStyle={{ color: '#722ed1' }}
-              suffix="笔"
+              suffix="元"
             />
           </Card>
         </Col>

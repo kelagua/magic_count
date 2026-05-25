@@ -9,8 +9,8 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum CategoryType {
-  INCOME = 'income',
-  EXPENSE = 'expense',
+  ENTRY = 'entry',     // 入账/商品分类
+  EXPENSE = 'expense', // 支出分类
 }
 
 export class CreateCategoryDto {
@@ -30,7 +30,7 @@ export class CreateCategoryDto {
     example: 'expense',
     enum: CategoryType,
   })
-  @IsEnum(CategoryType, { message: '类型必须是income或expense' })
+  @IsEnum(CategoryType, { message: '类型必须是entry或expense' })
   type: CategoryType;
 
   @ApiProperty({
@@ -86,7 +86,7 @@ export class UpdateCategoryDto {
     required: false,
   })
   @IsOptional()
-  @IsEnum(CategoryType, { message: '类型必须是income或expense' })
+  @IsEnum(CategoryType, { message: '类型必须是entry或expense' })
   type?: CategoryType;
 
   @ApiProperty({

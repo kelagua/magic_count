@@ -28,10 +28,10 @@ export class PrismaService
       // 如果没有默认分类，插入默认分类
       if (existingDefaultCategories === 0) {
         const defaultCategories = [
-          // 收入分类
+          // 入账/商品分类
           {
             name: '客户回款',
-            type: 'income',
+            type: 'entry',
             icon: '💰',
             color: '#4CAF50',
             isDefault: true,
@@ -39,7 +39,7 @@ export class PrismaService
           },
           {
             name: '现金收款',
-            type: 'income',
+            type: 'entry',
             icon: '💵',
             color: '#8BC34A',
             isDefault: true,
@@ -47,7 +47,7 @@ export class PrismaService
           },
           {
             name: '其他收款',
-            type: 'income',
+            type: 'entry',
             icon: '📈',
             color: '#009688',
             isDefault: true,
@@ -261,9 +261,9 @@ export class PrismaService
   async getStatistics(userId: string) {
     const where = { userId };
 
-    const [incomeSum, expenseSum, billCount] = await Promise.all([
+    const [entrySum, expenseSum, billCount] = await Promise.all([
       this.bill.aggregate({
-        where: { ...where, type: 'income' },
+        where: { ...where, type: 'entry' },
         _sum: { amount: true },
       }),
       this.bill.aggregate({
@@ -273,14 +273,14 @@ export class PrismaService
       this.bill.count({ where }),
     ]);
 
-    const totalIncome = Number(incomeSum._sum.amount || 0);
+    const totalEntry = Number(entrySum._sum.amount || 0);
     const totalExpense = Number(expenseSum._sum.amount || 0);
 
     return {
       data: {
-        totalIncome,
+        totalEntry,
         totalExpense,
-        balance: totalIncome - totalExpense,
+        balance: totalEntry - totalExpense,
         billCount,
       },
       error: null,

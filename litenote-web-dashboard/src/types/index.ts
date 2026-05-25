@@ -217,6 +217,8 @@ export interface HomeStatistics {
   unsettledCreditCount: number;
   totalIncome: number;
   totalExpense: number;
+  monthlyCredit: number;
+  monthlySettledCredits: number;
   recentBills: Bill[];
   topDebtors: TopDebtor[];
 }
