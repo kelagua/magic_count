@@ -61,17 +61,17 @@ export interface AIAdapter {
 /**
  * 账单解析的系统提示词
  */
-export const BILL_PARSE_PROMPT = `你是一个专业的农资赊账记账助手。请从以下内容中提取所有的赊账、回款或收入记录。
+export const BILL_PARSE_PROMPT = `你是一个专业的农资记账助手。请从以下内容中提取所有的入账或支出记录。
 
 对于每条记录，请提取：
 - amount: 金额（数字，保留小数）
-- type: 类型（expense=支出, income=收入）
+- type: 类型（expense=支出, entry=入账）
 - categoryName: 分类（种子/化肥/农药/农机/农具/运输/其他农资/客户回款/现金收款/其他收款/其他）
 - description: 简短描述（10字以内）
 - date: 日期（YYYY-MM-DD 格式，如无法确定则使用今天日期）
 
 请以 JSON 数组格式返回，例如：
-[{"amount": 1200, "type": "expense", "categoryName": "化肥", "description": "张三化肥赊账", "date": "2026-01-25"}]
+[{"amount": 1200, "type": "expense", "categoryName": "化肥", "description": "张三化肥", "date": "2026-01-25"}]
 
 注意：
 1. 如果无法识别任何账单信息，返回空数组 []
@@ -103,14 +103,14 @@ export function parseAIResponse(response: string): ParsedBillDto[] {
         (item) =>
           typeof item.amount === 'number' &&
           item.amount > 0 &&
-          ['income', 'expense'].includes(item.type) &&
+          ['entry', 'expense'].includes(item.type) &&
           typeof item.categoryName === 'string' &&
           typeof item.description === 'string' &&
           typeof item.date === 'string',
       )
       .map((item) => ({
         amount: Number(item.amount.toFixed(2)),
-        type: item.type as 'income' | 'expense',
+        type: item.type as 'entry' | 'expense',
         categoryName: item.categoryName,
         description: item.description.slice(0, 100),
         date: item.date,

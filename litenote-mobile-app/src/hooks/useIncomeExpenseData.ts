@@ -26,10 +26,10 @@ export function useDailyGridData(year: number, month: number) {
   });
 
   const dailyMap = useMemo(() => {
-    const map = new Map<string, { income: number; expense: number }>();
+    const map = new Map<string, { entry: number; expense: number }>();
     if (query.data?.dailyTrends) {
       query.data.dailyTrends.forEach((d) => {
-        map.set(d.date, { income: d.income, expense: d.expense });
+        map.set(d.date, { entry: d.entry, expense: d.expense });
       });
     }
     return map;
@@ -93,7 +93,7 @@ export function useMonthlyGridData(year: number) {
     if (!query.data?.monthlyTrends) return [];
     return query.data.monthlyTrends.map((t) => ({
       month: parseInt(t.month),
-      income: t.income,
+      entry: t.entry,
       expense: t.expense,
     }));
   }, [query.data]);
@@ -130,16 +130,16 @@ export function useYearlyGridData() {
 
   // 按年聚合
   const yearlyData = useMemo(() => {
-    const years: Array<{ year: number; income: number; expense: number }> = [];
+    const years: Array<{ year: number; entry: number; expense: number }> = [];
     for (let y = startYear; y <= currentYear; y++) {
-      years.push({ year: y, income: 0, expense: 0 });
+      years.push({ year: y, entry: 0, expense: 0 });
     }
 
     if (query.data?.monthlyTrends) {
       query.data.monthlyTrends.forEach((t) => {
         const yearItem = years.find((y) => y.year === t.year);
         if (yearItem) {
-          yearItem.income += t.income;
+          yearItem.entry += t.entry;
           yearItem.expense += t.expense;
         }
       });
@@ -155,7 +155,7 @@ export function useYearlyGridData() {
       .filter((t) => t.year === year)
       .map((t) => ({
         month: parseInt(t.month),
-        income: t.income,
+        entry: t.entry,
         expense: t.expense,
       }));
   };

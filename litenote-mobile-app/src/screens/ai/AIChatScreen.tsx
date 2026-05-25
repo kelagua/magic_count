@@ -113,7 +113,7 @@ function EditBillModal({
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [type, setType] = useState<'entry' | 'expense'>('expense');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
 
   useEffect(() => {
@@ -186,14 +186,14 @@ function EditBillModal({
                 <TouchableOpacity
                   style={[
                     modalStyles.typeButton,
-                    type === 'income' && modalStyles.typeButtonActiveIncome,
+                    type === 'entry' && modalStyles.typeButtonActiveIncome,
                   ]}
-                  onPress={() => setType('income')}
+                  onPress={() => setType('entry')}
                 >
                   <Text
                     style={[
                       modalStyles.typeButtonText,
-                      type === 'income' && modalStyles.typeButtonTextActiveIncome,
+                      type === 'entry' && modalStyles.typeButtonTextActiveIncome,
                     ]}
                   >
                     回款
@@ -1723,7 +1723,7 @@ export default function AIChatScreen() {
     return iconMap[categoryName] || '📦';
   };
 
-  const getCategoryId = (categoryName: string, type: 'income' | 'expense'): number | undefined => {
+  const getCategoryId = (categoryName: string, type: 'entry' | 'expense'): number | undefined => {
     const category = categories.find(c => c.name === categoryName && c.type === type);
     return category?.id;
   };
@@ -1946,13 +1946,13 @@ export default function AIChatScreen() {
                 <View style={toolCardStyles.statsRow}>
                   <Text style={toolCardStyles.statsLabel}>总回款</Text>
                   <Text style={[toolCardStyles.statsValue, { color: '#4CAF50' }]}>
-                    ¥{Number(stats.totalIncome || 0).toFixed(2)}
+                    ¥{Number(stats.totalEntry || 0).toFixed(2)}
                   </Text>
                 </View>
                 <View style={[toolCardStyles.statsRow, { borderBottomWidth: 0 }]}>
                   <Text style={toolCardStyles.statsLabel}>差额</Text>
                   <Text style={[toolCardStyles.statsValue, { fontWeight: '700' }]}>
-                    ¥{(Number(stats.totalIncome || 0) - Number(stats.totalExpense || 0)).toFixed(2)}
+                    ¥{(Number(stats.totalEntry || 0) - Number(stats.totalExpense || 0)).toFixed(2)}
                   </Text>
                 </View>
               </View>

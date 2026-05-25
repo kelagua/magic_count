@@ -54,11 +54,13 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
 
     setLoading(true);
     try {
+      // 只允许 entry 或 expense 类型创建分类
+      const categoryType = billType === 'settlement' ? 'expense' : billType === 'entry' ? 'entry' : 'expense';
       await categoriesService.createCategory({
         name: categoryName.trim(),
-        type: billType,
+        type: categoryType,
         icon: selectedIcon,
-        color: billType === 'income' ? styles._colors.income : styles._colors.expense,
+        color: categoryType === 'entry' ? styles._colors.income : styles._colors.expense,
       });
 
       showSuccess('分类创建成功');

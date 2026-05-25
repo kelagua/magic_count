@@ -66,7 +66,7 @@ export default function DashboardScreen() {
     refetch,
   } = useDashboard();
 
-  // 赊账概览数据
+  // 未结清概览数据
   const [homeStats, setHomeStats] = useState<HomeStatistics | null>(null);
 
   useEffect(() => {
@@ -103,8 +103,8 @@ export default function DashboardScreen() {
     navigation.navigate('AllBills', { initialFilter: 'expense' });
   };
 
-  const handleViewIncome = () => {
-    navigation.navigate('AllBills', { initialFilter: 'income' });
+  const handleViewEntry = () => {
+    navigation.navigate('AllBills', { initialFilter: 'entry' });
   };
 
   const handleViewBillDetail = (bill: BillData) => {
@@ -119,8 +119,8 @@ export default function DashboardScreen() {
     (navigation as any).navigate('UnsettledCredits');
   };
 
-  const handleCreateCredit = () => {
-    (navigation as any).navigate('CreateBill', { initialType: 'credit' });
+  const handleCreateEntry = () => {
+    (navigation as any).navigate('CreateBill', { initialType: 'entry' });
   };
 
   // 分类图标
@@ -185,7 +185,7 @@ export default function DashboardScreen() {
         </View>
         <View style={styles.overviewContent}>
           <Text style={styles.overviewLabel}>本月营业额</Text>
-          <Text style={styles.overviewBalance}>¥ {((homeStats?.totalIncome || 0) + (homeStats?.totalExpense || 0)).toFixed(2)}</Text>
+          <Text style={styles.overviewBalance}>¥ {((homeStats?.totalRevenue || 0) + (homeStats?.monthlyExpense || 0)).toFixed(2)}</Text>
 
           <View style={styles.overviewDivider} />
 
@@ -195,25 +195,25 @@ export default function DashboardScreen() {
                 <Text style={styles.statIcon}>↘</Text>
               </View>
               <View>
-                <Text style={styles.statLabel}>本月赊账</Text>
-                <Text style={styles.statValue}>¥ {(homeStats?.monthlyCredit || 0).toFixed(2)}</Text>
+                <Text style={styles.statLabel}>本月入账</Text>
+                <Text style={styles.statValue}>¥ {(homeStats?.monthlyEntry || 0).toFixed(2)}</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.statBlockGreen} onPress={handleViewIncome}>
+            <TouchableOpacity style={styles.statBlockGreen} onPress={handleViewEntry}>
               <View style={styles.statIconBlockGreen}>
                 <Text style={styles.statIcon}>↗</Text>
               </View>
               <View>
                 <Text style={styles.statLabel}>本月结清</Text>
-                <Text style={styles.statValue}>¥ {(homeStats?.monthlySettledCredits || 0).toFixed(2)}</Text>
+                <Text style={styles.statValue}>¥ {(homeStats?.monthlySettled || 0).toFixed(2)}</Text>
               </View>
             </TouchableOpacity>
           </View>
         </View>
       </TouchableOpacity>
 
-      {/* ========== 赊账概览 ========== */}
-      {homeStats && (homeStats.totalUnsettledCredits > 0 || homeStats.unsettledCreditCount > 0) && (
+      {/* ========== 未结清概览 ========== */}
+      {homeStats && (homeStats.unsettledAmount > 0 || homeStats.unsettledCount > 0) && (
         <TouchableOpacity
           style={styles.creditOverviewCard}
           onPress={handleViewUnsettledCredits}
@@ -222,24 +222,24 @@ export default function DashboardScreen() {
           <View style={styles.creditOverviewHeader}>
             <View style={styles.creditOverviewTitleRow}>
               <Text style={styles.creditOverviewSticker}>💳</Text>
-              <Text style={styles.creditOverviewTitle}>赊账概览</Text>
+              <Text style={styles.creditOverviewTitle}>未结清概览</Text>
             </View>
             <View style={styles.creditBadgeWarning}>
-              <Text style={styles.creditBadgeText}>{homeStats.unsettledCreditCount}笔未结清</Text>
+              <Text style={styles.creditBadgeText}>{homeStats.unsettledCount}笔未结清</Text>
             </View>
           </View>
 
           <View style={styles.creditOverviewStats}>
             <View style={styles.creditStatBlock}>
               <Text style={styles.creditStatLabel}>未结清总额</Text>
-              <Text style={styles.creditStatAmount}>¥ {homeStats.totalUnsettledCredits.toFixed(2)}</Text>
+              <Text style={styles.creditStatAmount}>¥ {homeStats.unsettledAmount.toFixed(2)}</Text>
             </View>
-            {homeStats.monthlySettledCredits > 0 && (
+            {homeStats.monthlySettled > 0 && (
               <>
                 <View style={styles.creditStatDivider} />
                 <View style={styles.creditStatBlock}>
                   <Text style={styles.creditStatLabel}>本月已结清</Text>
-                  <Text style={styles.creditStatSettled}>¥ {homeStats.monthlySettledCredits.toFixed(2)}</Text>
+                  <Text style={styles.creditStatSettled}>¥ {homeStats.monthlySettled.toFixed(2)}</Text>
                 </View>
               </>
             )}
@@ -258,7 +258,7 @@ export default function DashboardScreen() {
                   </View>
                   <View style={styles.debtorInfo}>
                     <Text style={styles.debtorName}>{debtor.customerName}</Text>
-                    <Text style={styles.debtorCount}>{debtor.billCount}笔赊账</Text>
+                    <Text style={styles.debtorCount}>{debtor.billCount}笔入账</Text>
                   </View>
                   <Text style={styles.debtorAmount}>¥ {debtor.totalAmount.toFixed(2)}</Text>
                 </View>
@@ -272,13 +272,13 @@ export default function DashboardScreen() {
       <View style={styles.quickActions}>
         <TouchableOpacity
           style={styles.quickActionItem}
-          onPress={handleCreateCredit}
+          onPress={handleCreateEntry}
           activeOpacity={0.8}
         >
           <View style={styles.quickActionIconBlock}>
             <Text style={styles.quickActionIcon}>📝</Text>
           </View>
-          <Text style={styles.quickActionLabel}>记赊账</Text>
+          <Text style={styles.quickActionLabel}>记入账</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -311,7 +311,7 @@ export default function DashboardScreen() {
           <View style={[styles.quickActionIconBlock, { backgroundColor: styles._colors.success }]}>
             <Text style={styles.quickActionIcon}>💰</Text>
           </View>
-          <Text style={styles.quickActionLabel}>记回款</Text>
+          <Text style={styles.quickActionLabel}>记入账</Text>
         </TouchableOpacity>
       </View>
 
@@ -362,11 +362,11 @@ export default function DashboardScreen() {
                   </View>
                   <View style={[
                     styles.amountBadge,
-                    bill.type === 'income' ? styles.incomeBadge : bill.type === 'credit' ? styles.creditBadge : styles.expenseBadge,
+                    bill.type === 'entry' ? styles.incomeBadge : bill.type === 'settlement' ? styles.creditBadge : styles.expenseBadge,
                   ]}>
                     <Text style={[
                       styles.transactionAmount,
-                      bill.type === 'income' ? styles.incomeAmount : bill.type === 'credit' ? styles.creditAmount : styles.expenseAmount,
+                      bill.type === 'entry' ? styles.incomeAmount : bill.type === 'settlement' ? styles.creditAmount : styles.expenseAmount,
                     ]}>
                       {bill.type === 'expense' ? '-' : '+'}¥{Number(bill.amount).toFixed(2)}
                     </Text>

@@ -10,7 +10,7 @@ import { useStyles } from '../../hooks';
 
 interface MonthSummary {
   month: number;
-  income: number;
+  entry: number;
   expense: number;
 }
 
@@ -23,8 +23,8 @@ export default function MonthlySummaryList({ data, onMonthPress }: MonthlySummar
   const styles = useStyles(createStyles);
 
   const renderItem = ({ item }: { item: MonthSummary }) => {
-    const net = item.income - item.expense;
-    const hasData = item.income > 0 || item.expense > 0;
+    const net = item.entry - item.expense;
+    const hasData = item.entry > 0 || item.expense > 0;
 
     return (
       <TouchableOpacity
@@ -38,7 +38,7 @@ export default function MonthlySummaryList({ data, onMonthPress }: MonthlySummar
           <View style={styles.amountCol}>
             <Text style={styles.amountLabel}>回款</Text>
             <Text style={styles.incomeText}>
-              {item.income > 0 ? `+${item.income.toFixed(2)}` : '0.00'}
+              {item.entry > 0 ? `+${item.entry.toFixed(2)}` : '0.00'}
             </Text>
           </View>
           <View style={styles.amountCol}>

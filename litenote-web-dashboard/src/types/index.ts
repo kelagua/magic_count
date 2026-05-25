@@ -1,7 +1,7 @@
 // ==================== 基础类型 ====================
 
-export type BillType = 'income' | 'expense' | 'credit';
-export type CategoryType = 'income' | 'expense';
+export type BillType = 'entry' | 'settlement' | 'expense';
+export type CategoryType = 'entry' | 'expense';
 
 // ==================== 用户相关 ====================
 
@@ -101,7 +101,7 @@ export interface Bill {
   customerId?: number;
   isSettled: boolean;
   settledAt?: string;
-  settledBatchId?: string;
+  relatedEntryIds?: number[];  // settlement 类型关联的入账ID
   userId: string;
   category?: Category;
   customer?: Customer;
@@ -116,6 +116,7 @@ export interface CreateBillRequest {
   date: string;
   categoryId?: number;
   customerId?: number;
+  relatedEntryIds?: number[];  // settlement 类型必填
 }
 
 export interface UpdateBillRequest {
@@ -146,12 +147,9 @@ export interface SettleBatchRequest {
 }
 
 export interface SettleBatchResponse {
-  settledBatchId: string;
-  settledAt: string;
-  paymentMethod?: string;
+  settlement: Bill;
   settledCount: number;
   totalAmount: number;
-  bills: Bill[];
 }
 
 // ==================== 分页 ====================
@@ -182,24 +180,27 @@ export interface CategoryStat {
 export interface MonthlyTrend {
   month: string;
   year: number;
-  income: number;
+  entry: number;
+  settlement: number;
   expense: number;
 }
 
 export interface DailyTrend {
   date: string;
-  income: number;
+  entry: number;
+  settlement: number;
   expense: number;
 }
 
 export interface StatisticsData {
-  totalIncome: number;
+  totalEntry: number;
+  totalSettlement: number;
   totalExpense: number;
-  balance: number;
-  incomeCount: number;
+  entryCount: number;
+  settlementCount: number;
   expenseCount: number;
+  entryCategoryStats: CategoryStat[];
   expenseCategoryStats: CategoryStat[];
-  incomeCategoryStats: CategoryStat[];
   monthlyTrends: MonthlyTrend[];
   dailyTrends: DailyTrend[];
 }
@@ -213,12 +214,12 @@ export interface TopDebtor {
 }
 
 export interface HomeStatistics {
-  totalUnsettledCredits: number;
-  unsettledCreditCount: number;
-  totalIncome: number;
-  totalExpense: number;
-  monthlyCredit: number;
-  monthlySettledCredits: number;
+  totalRevenue: number;      // 本月营业额
+  monthlyEntry: number;      // 本月入账
+  monthlySettled: number;    // 本月结清
+  monthlyExpense: number;    // 本月支出
+  unsettledAmount: number;   // 未结清总额
+  unsettledCount: number;    // 未结清笔数
   recentBills: Bill[];
   topDebtors: TopDebtor[];
 }

@@ -51,10 +51,10 @@ export class ParsedBillDto {
 
   @ApiProperty({
     description: '类型',
-    enum: ['income', 'expense'],
+    enum: ['entry', 'expense'],
     example: 'expense',
   })
-  type: 'income' | 'expense';
+  type: 'entry' | 'expense';
 
   @ApiProperty({ description: '分类名称', example: '化肥' })
   categoryName: string;

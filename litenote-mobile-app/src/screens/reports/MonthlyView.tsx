@@ -67,7 +67,7 @@ export default function MonthlyView({
   // 将 dailyMap 转换为 DailySummaryList 需要的数组格式
   const dailySummaryData = React.useMemo(() => {
     if (!selectedMonth) return [];
-    const result: Array<{ date: string; income: number; expense: number }> = [];
+    const result: Array<{ date: string; entry: number; expense: number }> = [];
     dailyMap.forEach((value, key) => {
       result.push({ date: key, ...value });
     });

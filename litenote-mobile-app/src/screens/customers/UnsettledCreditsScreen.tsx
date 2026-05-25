@@ -1,6 +1,6 @@
 /**
- * 未结清赊账页面 - Neo-Brutalism 风格
- * 显示所有未结清的赊账账单，支持多选批量结算
+ * 未结清入账页面 - Neo-Brutalism 风格
+ * 显示所有未结清的入账账单，支持多选批量结算
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -34,7 +34,7 @@ export default function UnsettledCreditsScreen() {
   const fetchData = useCallback(async () => {
     try {
       const response = await billsService.getBills({
-        type: 'credit',
+        type: 'entry',
         isSettled: false,
         limit: 200,
         orderBy: 'date',
@@ -42,7 +42,7 @@ export default function UnsettledCreditsScreen() {
       });
       setUnsettledBills(response.data || []);
     } catch (error: any) {
-      showError(error.message || '获取赊账列表失败');
+      showError(error.message || '获取入账列表失败');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -114,7 +114,7 @@ export default function UnsettledCreditsScreen() {
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryBlock}>
-            <Text style={styles.summaryLabel}>赊账笔数</Text>
+            <Text style={styles.summaryLabel}>入账笔数</Text>
             <Text style={styles.summaryCount}>{unsettledBills.length} 笔</Text>
           </View>
         </View>
@@ -173,7 +173,7 @@ export default function UnsettledCreditsScreen() {
 
                 <View style={styles.billInfo}>
                   <Text style={styles.billDescription}>
-                    {bill.description || bill.category?.name || '赊账'}
+                    {bill.description || bill.category?.name || '入账'}
                   </Text>
                   <Text style={styles.billMeta}>
                     {new Date(bill.date).toLocaleDateString('zh-CN', {
@@ -191,7 +191,7 @@ export default function UnsettledCreditsScreen() {
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>✅</Text>
-            <Text style={styles.emptyText}>所有赊账已结清</Text>
+            <Text style={styles.emptyText}>所有入账已结清</Text>
           </View>
         )}
       </ScrollView>

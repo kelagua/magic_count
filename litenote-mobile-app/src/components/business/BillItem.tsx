@@ -1,7 +1,7 @@
 /**
  * 账单项组件 - Neo-Brutalism 风格
  * 描边卡片 + Courier 金额（列表用，无实心阴影）
- * 支持赊账(credit)类型，显示客户名和结清状态
+ * 支持入账(entry)/结清(settlement)类型，显示客户名和结清状态
  */
 import React from 'react';
 import {
@@ -39,17 +39,17 @@ const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
     onPress?.(bill);
   };
 
-  const isIncome = bill.type === 'income';
-  const isCredit = bill.type === 'credit';
+  const isEntry = bill.type === 'entry';
+  const isSettlement = bill.type === 'settlement';
 
   // 根据类型选择图标背景色
   const getIconBgColor = () => {
-    if (isCredit) return styles._colors.warning;
-    if (isIncome) return styles._colors.success;
+    if (isSettlement) return styles._colors.primary;
+    if (isEntry) return styles._colors.success;
     return styles._colors.accent;
   };
 
-  // 根据类型选择金额显示（只有支出显示负号，收入和赊账显示正号）
+  // 根据类型选择金额显示（只有支出显示负号，入账和结清显示正号）
   const getAmountPrefix = () => {
     if (bill.type === 'expense') return '-';
     return '+';
@@ -76,8 +76,8 @@ const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
               {bill.description}
             </Text>
           )}
-          {/* 赊账类型显示客户名 */}
-          {isCredit && bill.customerName && (
+          {/* 入账/结清类型显示客户名 */}
+          {isEntry && bill.customerName && (
             <Text style={styles.customerName}>👤 {bill.customerName}</Text>
           )}
         </View>
@@ -86,17 +86,17 @@ const BillItem: React.FC<BillItemProps> = ({ bill, onPress }) => {
       <View style={styles.rightSection}>
         <View style={[
           styles.amountBadge,
-          isIncome ? styles.incomeBadge : isCredit ? styles.creditBadge : styles.expenseBadge,
+          isEntry ? styles.incomeBadge : isSettlement ? styles.creditBadge : styles.expenseBadge,
         ]}>
           <Text style={[
             styles.amount,
-            isIncome ? styles.incomeAmount : isCredit ? styles.creditAmount : styles.expenseAmount,
+            isEntry ? styles.incomeAmount : isSettlement ? styles.creditAmount : styles.expenseAmount,
           ]}>
             {getAmountPrefix()}¥{Math.abs(bill.amount).toFixed(2)}
           </Text>
         </View>
-        {/* 赊账类型显示结清状态 */}
-        {isCredit && (
+        {/* 结清类型显示结清状态 */}
+        {isSettlement && (
           <View style={[
             styles.settleBadge,
             bill.isSettled ? styles.settledBadge : styles.unsettledBadge,

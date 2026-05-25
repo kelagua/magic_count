@@ -4,7 +4,7 @@
 import type { CategoryData } from './category';
 import type { CustomerData } from './customer';
 
-export type BillType = 'income' | 'expense' | 'credit';
+export type BillType = 'entry' | 'settlement' | 'expense';
 
 export interface BillData {
   id: number;
@@ -14,9 +14,9 @@ export interface BillData {
   date: string;
   categoryId?: number;
   customerId?: number;
-  isSettled?: boolean;
+  isSettled?: boolean;         // 仅 entry 类型有意义
   settledAt?: string;
-  settledBatchId?: number;
+  relatedEntryIds?: number[];  // settlement 类型关联的入账ID
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -31,6 +31,7 @@ export interface CreateBillDto {
   date: string;
   categoryId?: number;
   customerId?: number;
+  relatedEntryIds?: number[];  // settlement 类型必填
 }
 
 export interface UpdateBillDto {
@@ -61,12 +62,12 @@ export interface SettleBatchDto {
 }
 
 export interface HomeStatistics {
-  totalUnsettledCredits: number;
-  unsettledCreditCount: number;
-  totalIncome: number;
-  totalExpense: number;
-  monthlyCredit: number;
-  monthlySettledCredits: number;
+  totalRevenue: number;      // 本月营业额（所有 entry 合计）
+  monthlyEntry: number;      // 本月入账（新增未结清）
+  monthlySettled: number;    // 本月结清（settlement 合计）
+  monthlyExpense: number;    // 本月支出
+  unsettledAmount: number;   // 未结清总额
+  unsettledCount: number;    // 未结清笔数
   recentBills: BillData[];
   topDebtors: Array<{
     customerId: number;
@@ -89,24 +90,27 @@ export interface CategoryStatistic {
 export interface MonthlyTrend {
   month: string;
   year: number;
-  income: number;
+  entry: number;
+  settlement: number;
   expense: number;
 }
 
 export interface DailyTrend {
   date: string;
-  income: number;
+  entry: number;
+  settlement: number;
   expense: number;
 }
 
 export interface BillStatistics {
-  totalIncome: number;
+  totalEntry: number;
+  totalSettlement: number;
   totalExpense: number;
-  balance: number;
-  incomeCount: number;
+  entryCount: number;
+  settlementCount: number;
   expenseCount: number;
+  entryCategoryStats: CategoryStatistic[];
   expenseCategoryStats: CategoryStatistic[];
-  incomeCategoryStats: CategoryStatistic[];
   monthlyTrends: MonthlyTrend[];
   dailyTrends: DailyTrend[];
 }

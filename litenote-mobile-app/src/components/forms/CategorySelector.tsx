@@ -35,7 +35,9 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const response = await categoriesService.getCategories(billType);
+      // 只传递有效的分类类型
+      const type = billType === 'settlement' ? 'expense' : billType;
+      const response = await categoriesService.getCategories(type === 'expense' || type === 'entry' ? type : undefined);
       if (response.success && response.data) {
         setCategories(response.data);
       }

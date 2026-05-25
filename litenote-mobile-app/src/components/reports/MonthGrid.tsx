@@ -15,7 +15,7 @@ const GAP = spacing.sm;
 
 interface MonthGridProps {
   year: number;
-  monthlyData: Array<{ month: number; income: number; expense: number }>;
+  monthlyData: Array<{ month: number; entry: number; expense: number }>;
   selectedMonth: number | null;
   onMonthPress: (month: number) => void;
 }
@@ -38,21 +38,21 @@ export default function MonthGrid({
     return Array.from({ length: 12 }, (_, i) => {
       const monthNum = i + 1;
       const data = monthlyData.find((m) => m.month === monthNum);
-      const income = data?.income ?? 0;
+      const entry = data?.entry ?? 0;
       const expense = data?.expense ?? 0;
       const isFuture = year > currentYear || (year === currentYear && monthNum > currentMonth);
-      return { monthNum, income, expense, isFuture };
+      return { monthNum, entry, expense, isFuture };
     });
   }, [year, monthlyData, currentYear, currentMonth]);
 
   return (
     <View style={styles.container}>
       <View style={styles.grid}>
-        {months.map(({ monthNum, income, expense, isFuture }) => (
+        {months.map(({ monthNum, entry, expense, isFuture }) => (
           <View key={monthNum} style={{ marginRight: monthNum % NUM_COLS === 0 ? 0 : GAP, marginBottom: GAP }}>
             <GridCell
               label={`${monthNum}月`}
-              income={isFuture ? 0 : income}
+              entry={isFuture ? 0 : entry}
               expense={isFuture ? 0 : expense}
               isSelected={selectedMonth === monthNum}
               isCurrentPeriod={year === currentYear && monthNum === currentMonth}

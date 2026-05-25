@@ -27,7 +27,7 @@ const CategoryManageScreen: React.FC = () => {
 
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedType, setSelectedType] = useState<'expense' | 'income'>('expense');
+  const [selectedType, setSelectedType] = useState<'expense' | 'entry'>('expense');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryData | null>(null);
 
@@ -107,10 +107,10 @@ const CategoryManageScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, selectedType === 'income' && styles.tabIncomeActive]}
-          onPress={() => setSelectedType('income')}
+          style={[styles.tab, selectedType === 'entry' && styles.tabIncomeActive]}
+          onPress={() => setSelectedType('entry')}
         >
-          <Text style={[styles.tabText, selectedType === 'income' && styles.tabTextActive]}>
+          <Text style={[styles.tabText, selectedType === 'entry' && styles.tabTextActive]}>
             回款分类
           </Text>
         </TouchableOpacity>

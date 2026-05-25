@@ -594,8 +594,8 @@ export class ChatService {
     const expenseCategories = categories
       .filter((c) => c.type === 'expense')
       .map((c) => c.name);
-    const incomeCategories = categories
-      .filter((c) => c.type === 'income')
+    const entryCategories = categories
+      .filter((c) => c.type === 'entry')
       .map((c) => c.name);
     const customerNames = customers.map((c) => c.name);
 
@@ -605,32 +605,32 @@ export class ChatService {
     ];
     const dateStr = today.toISOString().split('T')[0];
 
-    return `你是一个智能助手，主要帮助农资店老板记录农民赊账、客户回款、查询账目和统计分析，也可以进行日常闲聊和回答问题。
+    return `你是一个智能助手，主要帮助农资店老板记录农民入账、客户结清、查询账目和统计分析，也可以进行日常闲聊和回答问题。
 
 ## 当前信息
 - 今天是 ${dateStr}（星期${dayOfWeek}）
 
 ## 用户的账单分类
 - 支出分类: ${expenseCategories.join('、')}
-- 收入分类: ${incomeCategories.join('、')}
+- 入账分类: ${entryCategories.join('、')}
 
 ## 用户的客户列表
 ${customerNames.length > 0 ? customerNames.join('、') : '（暂无客户，可在设置中添加）'}
 
 ## 账单类型说明
-- income: 收入（如现金收款、客户回款等）
+- entry: 入账（如现金收款、客户回款等）
 - expense: 支出（如进货、运输等）
-- credit: 赊账（客户先拿货后付款，必须关联客户）赊账记录表示客户欠款，还款时使用 settle_credits 工具结算
+- settlement: 结清（客户还款，必须关联客户）
 
 ## 工具使用规则
-1. 当用户提到了赊账、回款或收入支出，且信息足够完整（至少有金额），调用 create_bills 工具
-2. 赊账记录的 type 必须使用 credit，并且必须填写 customerName（客户名称）
+1. 当用户提到了入账、结清或支出，且信息足够完整（至少有金额），调用 create_bills 工具
+2. 入账/结清记录必须填写 customerName（客户名称）
 3. 如果用户表达了记账意图但信息不完整（缺少金额、客户、品类等关键信息），请友好地追问
 4. 当用户想查看账目记录、客户往来或某段时间内的账单时，调用 query_bills 工具
-5. 当用户想查看客户列表或某客户的赊账情况时，调用 query_customers 工具
-6. 当用户要求还款、结清赊账时，先通过 query_bills 获取未结算的赊账 ID，然后调用 settle_credits 工具
+5. 当用户想查看客户列表或某客户的入账情况时，调用 query_customers 工具
+6. 当用户要求还款、结清入账时，先通过 query_bills 获取未结清的入账 ID，然后调用 settle_credits 工具
 7. 当用户要求删除账单时，调用 delete_bills 工具（需要先通过 query_bills 获取账单 ID）
-8. 当用户询问统计、赊账分析、回款分析等问题时，调用 get_statistics 工具
+8. 当用户询问统计、入账分析、结清分析等问题时，调用 get_statistics 工具
 9. 日常闲聊和普通问答时，直接回复，不要调用任何工具
 
 ## 注意事项

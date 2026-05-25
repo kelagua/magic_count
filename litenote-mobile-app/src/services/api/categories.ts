@@ -6,7 +6,7 @@ import { httpService } from '../http';
 export interface CategoryData {
   id: number;
   name: string;
-  type: 'income' | 'expense' | 'credit';
+  type: 'entry' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   isDefault: boolean;
@@ -18,7 +18,7 @@ export interface CategoryData {
 
 export interface CreateCategoryDto {
   name: string;
-  type: 'income' | 'expense' | 'credit';
+  type: 'entry' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   sortOrder?: number;
@@ -26,7 +26,7 @@ export interface CreateCategoryDto {
 
 export interface UpdateCategoryDto {
   name?: string;
-  type?: 'income' | 'expense' | 'credit';
+  type?: 'entry' | 'expense' | 'credit';
   icon?: string;
   color?: string;
   sortOrder?: number;
@@ -49,16 +49,16 @@ class CategoriesService {
   /**
    * 获取分类列表
    */
-  async getCategories(type?: 'income' | 'expense' | 'credit'): Promise<ApiResponse<CategoryData[]>> {
+  async getCategories(type?: 'entry' | 'expense' | 'credit'): Promise<ApiResponse<CategoryData[]>> {
     const params = type ? { type } : {};
     return httpService.get('/categories', { params });
   }
 
   /**
-   * 获取收入分类
+   * 获取入账分类
    */
-  async getIncomeCategories(): Promise<ApiResponse<CategoryData[]>> {
-    return this.getCategories('income');
+  async getEntryCategories(): Promise<ApiResponse<CategoryData[]>> {
+    return this.getCategories('entry');
   }
 
   /**
@@ -130,14 +130,14 @@ class CategoriesService {
    * 按类型分组获取分类
    */
   async getCategoriesByType(): Promise<{
-    income: CategoryData[];
+    entry: CategoryData[];
     expense: CategoryData[];
   }> {
     const response = await this.getCategories();
     const categories = response.data || [];
-    
+
     return {
-      income: categories.filter(cat => cat.type === 'income'),
+      entry: categories.filter(cat => cat.type === 'entry'),
       expense: categories.filter(cat => cat.type === 'expense'),
     };
   }

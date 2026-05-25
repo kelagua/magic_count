@@ -18,7 +18,7 @@ import { useStyles } from '../../hooks';
 import { billsService } from '../../services';
 
 type PeriodType = 'week' | 'month' | 'year';
-type DataType = 'expense' | 'income' | 'balance';
+type DataType = 'expense' | 'entry' | 'balance';
 
 const periodOptions = [
   { key: 'week', label: '周' },
@@ -28,7 +28,7 @@ const periodOptions = [
 
 const dataTypeOptions = [
   { key: 'expense', label: '赊账' },
-  { key: 'income', label: '回款' },
+  { key: 'entry', label: '回款' },
   { key: 'balance', label: '差额' },
 ];
 
@@ -65,8 +65,8 @@ export default function TrendAnalysisScreen() {
             let value = 0;
             if (stats.success && stats.data) {
               if (dataType === 'expense') value = stats.data.totalExpense || 0;
-              else if (dataType === 'income') value = stats.data.totalIncome || 0;
-              else value = (stats.data.totalIncome || 0) - (stats.data.totalExpense || 0);
+              else if (dataType === 'entry') value = stats.data.totalEntry || 0;
+              else value = (stats.data.totalEntry || 0) - (stats.data.totalExpense || 0);
             }
             dataPoints.push({
               label: `${date.getMonth() + 1}/${date.getDate()}`,
@@ -90,8 +90,8 @@ export default function TrendAnalysisScreen() {
             let value = 0;
             if (stats.success && stats.data) {
               if (dataType === 'expense') value = stats.data.totalExpense || 0;
-              else if (dataType === 'income') value = stats.data.totalIncome || 0;
-              else value = (stats.data.totalIncome || 0) - (stats.data.totalExpense || 0);
+              else if (dataType === 'entry') value = stats.data.totalEntry || 0;
+              else value = (stats.data.totalEntry || 0) - (stats.data.totalExpense || 0);
             }
 
             dataPoints.push({
@@ -114,8 +114,8 @@ export default function TrendAnalysisScreen() {
             let value = 0;
             if (stats.success && stats.data) {
               if (dataType === 'expense') value = stats.data.totalExpense || 0;
-              else if (dataType === 'income') value = stats.data.totalIncome || 0;
-              else value = (stats.data.totalIncome || 0) - (stats.data.totalExpense || 0);
+              else if (dataType === 'entry') value = stats.data.totalEntry || 0;
+              else value = (stats.data.totalEntry || 0) - (stats.data.totalExpense || 0);
             }
 
             dataPoints.push({
@@ -152,7 +152,7 @@ export default function TrendAnalysisScreen() {
     switch (dataType) {
       case 'expense':
         return styles._colors.expense;
-      case 'income':
+      case 'entry':
         return styles._colors.income;
       default:
         return styles._colors.primary;
@@ -186,7 +186,7 @@ export default function TrendAnalysisScreen() {
       {/* 趋势图表 */}
       <View style={styles.chartCard}>
         <Text style={styles.chartTitle}>
-          {dataType === 'expense' ? '📉 赊账趋势' : dataType === 'income' ? '📈 回款趋势' : '💰 差额趋势'}
+          {dataType === 'expense' ? '📉 赊账趋势' : dataType === 'entry' ? '📈 回款趋势' : '💰 差额趋势'}
         </Text>
         {trendData.length > 0 ? (
           <View style={styles.chartWrapper}>
