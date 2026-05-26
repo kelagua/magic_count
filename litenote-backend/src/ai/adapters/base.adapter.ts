@@ -103,14 +103,14 @@ export function parseAIResponse(response: string): ParsedBillDto[] {
         (item) =>
           typeof item.amount === 'number' &&
           item.amount > 0 &&
-          ['income', 'expense'].includes(item.type) &&
+          ['entry', 'settlement', 'expense'].includes(item.type) &&
           typeof item.categoryName === 'string' &&
           typeof item.description === 'string' &&
           typeof item.date === 'string',
       )
       .map((item) => ({
         amount: Number(item.amount.toFixed(2)),
-        type: item.type as 'income' | 'expense',
+        type: item.type as 'entry' | 'settlement' | 'expense',
         categoryName: item.categoryName,
         description: item.description.slice(0, 100),
         date: item.date,
