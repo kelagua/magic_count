@@ -15,7 +15,7 @@ export function useAssetsData() {
     queryKey: ['total-assets'],
     queryFn: async () => {
       const res = await billsService.getBillStatistics({});
-      return res.data ?? { totalIncome: 0, totalExpense: 0, balance: 0 };
+      return res.data ?? { totalEntry: 0, totalExpense: 0, totalSettlement: 0 };
     },
     staleTime: CACHE_TIME.DASHBOARD,
     gcTime: GC_TIME.DEFAULT,
@@ -35,15 +35,15 @@ export function useAssetsData() {
         endDate,
         granularity: 'monthly',
       });
-      return res.data ?? { monthlyTrends: [], totalIncome: 0, totalExpense: 0, incomeCategoryStats: [], expenseCategoryStats: [] };
+      return res.data ?? { monthlyTrends: [], totalEntry: 0, totalExpense: 0, totalSettlement: 0, entryCategoryStats: [], expenseCategoryStats: [] };
     },
     staleTime: CACHE_TIME.STATISTICS,
     gcTime: GC_TIME.DEFAULT,
   });
 
   // 总资产 = 全部收入 - 全部支出
-  const netWorth = (totalQuery.data?.totalIncome ?? 0) - (totalQuery.data?.totalExpense ?? 0);
-  const totalIncome = totalQuery.data?.totalIncome ?? 0;
+  const netWorth = (totalQuery.data?.totalEntry ?? 0) - (totalQuery.data?.totalExpense ?? 0);
+  const totalEntry = totalQuery.data?.totalEntry ?? 0;
   const totalExpense = totalQuery.data?.totalExpense ?? 0;
 
   // 计算资产趋势折线图数据（逐月累计）
@@ -51,12 +51,12 @@ export function useAssetsData() {
     if (!trendQuery.data?.monthlyTrends) return [];
 
     const trends = trendQuery.data.monthlyTrends;
-    const totalNetInRange = trends.reduce((sum, t) => sum + (t.income - t.expense), 0);
+    const totalNetInRange = trends.reduce((sum, t) => sum + (t.entry - t.expense), 0);
 
     // 从后往前反推每月末的累计资产
     let cumulative = 0;
     return trends.map((t) => {
-      cumulative += t.income - t.expense;
+      cumulative += t.entry - t.expense;
       return {
         month: t.month,
         value: Math.round((netWorth - totalNetInRange + cumulative) * 100) / 100,
@@ -65,7 +65,7 @@ export function useAssetsData() {
   }, [trendQuery.data, netWorth]);
 
   // 收入/支出分类构成（用于饼图）
-  const incomeCategoryStats = trendQuery.data?.incomeCategoryStats ?? [];
+  const entryCategoryStats = trendQuery.data?.entryCategoryStats ?? [];
   const expenseCategoryStats = trendQuery.data?.expenseCategoryStats ?? [];
 
   // 趋势图日期范围描述
@@ -79,11 +79,11 @@ export function useAssetsData() {
 
   return {
     netWorth,
-    totalIncome,
+    totalEntry,
     totalExpense,
     assetTrendData,
     trendDateRange,
-    incomeCategoryStats,
+    entryCategoryStats,
     expenseCategoryStats,
     isLoading: totalQuery.isLoading || trendQuery.isLoading,
     refetch: () => {

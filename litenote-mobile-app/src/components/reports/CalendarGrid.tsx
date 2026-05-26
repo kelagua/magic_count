@@ -15,7 +15,7 @@ const WEEK_DAYS = ['一', '二', '三', '四', '五', '六', '日'];
 interface CalendarGridProps {
   year: number;
   month: number; // 0-indexed
-  dailyData: Map<string, { income: number; expense: number }>;
+  dailyData: Map<string, { entry: number; expense: number }>;
   selectedDay: string | null;
   onDayPress: (dateStr: string) => void;
 }
@@ -83,7 +83,7 @@ export default function CalendarGrid({
           }
 
           const data = dailyData.get(cell.dateStr!);
-          const income = data?.income ?? 0;
+          const entry = data?.entry ?? 0;
           const expense = data?.expense ?? 0;
           const isFuture = cell.dateStr! > today;
 
@@ -91,7 +91,7 @@ export default function CalendarGrid({
             <GridCell
               key={cell.key}
               label={String(cell.day)}
-              income={isFuture ? 0 : income}
+              entry={isFuture ? 0 : entry}
               expense={isFuture ? 0 : expense}
               isSelected={selectedDay === cell.dateStr}
               isCurrentPeriod={cell.dateStr === today}

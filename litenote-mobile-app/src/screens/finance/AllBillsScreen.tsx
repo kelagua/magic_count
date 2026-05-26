@@ -27,13 +27,13 @@ const AllBillsScreen: React.FC = () => {
   const { showError } = useToast();
   const styles = useStyles(createStyles);
 
-  const routeParams = route.params as { initialFilter?: 'all' | 'income' | 'expense' } | undefined;
+  const routeParams = route.params as { initialFilter?: 'all' | 'entry' | 'expense' | 'settlement' } | undefined;
 
   const [bills, setBills] = useState<BillData[]>([]);
   const [groupedBills, setGroupedBills] = useState<{ [key: string]: BillData[] }>({});
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>(routeParams?.initialFilter || 'all');
+  const [filter, setFilter] = useState<'all' | 'entry' | 'expense' | 'settlement'>(routeParams?.initialFilter || 'all');
   const [timeRange, setTimeRange] = useState<'all' | 'month' | 'lastMonth' | 'custom'>('all');
 
   const fetchBills = async (isRefresh = false) => {
@@ -87,7 +87,7 @@ const AllBillsScreen: React.FC = () => {
   const calculateMonthTotal = (monthBills: BillData[]) => {
     return monthBills.reduce((total, bill) => {
       const amount = Number(bill.amount);
-      return total + (bill.type === 'expense' ? -amount : amount);
+      return total + (bill.type === 'entry' || bill.type === 'settlement' ? amount : -amount);
     }, 0);
   };
 
@@ -120,13 +120,19 @@ const AllBillsScreen: React.FC = () => {
             style={[styles.filterBtn, filter === 'expense' && styles.filterBtnActive]}
             onPress={() => setFilter('expense')}
           >
-            <Text style={[styles.filterText, filter === 'expense' && styles.filterTextActive]}>赊账</Text>
+            <Text style={[styles.filterText, filter === 'expense' && styles.filterTextActive]}>支出</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.filterBtn, filter === 'income' && styles.filterBtnActive]}
-            onPress={() => setFilter('income')}
+            style={[styles.filterBtn, filter === 'entry' && styles.filterBtnActive]}
+            onPress={() => setFilter('entry')}
           >
-            <Text style={[styles.filterText, filter === 'income' && styles.filterTextActive]}>回款</Text>
+            <Text style={[styles.filterText, filter === 'entry' && styles.filterTextActive]}>入账</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterBtn, filter === 'settlement' && styles.filterBtnActive]}
+            onPress={() => setFilter('settlement')}
+          >
+            <Text style={[styles.filterText, filter === 'settlement' && styles.filterTextActive]}>结清</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterBtn, timeRange === 'month' && styles.filterBtnActive]}

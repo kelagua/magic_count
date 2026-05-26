@@ -10,7 +10,7 @@ import { useStyles } from '../../hooks';
 
 interface DaySummary {
   date: string;
-  income: number;
+  entry: number;
   expense: number;
 }
 
@@ -23,7 +23,7 @@ export default function DailySummaryList({ data, onDayPress }: DailySummaryListP
   const styles = useStyles(createStyles);
 
   // 只展示有数据的天
-  const filtered = data.filter((d) => d.income > 0 || d.expense > 0);
+  const filtered = data.filter((d) => d.entry > 0 || d.expense > 0);
 
   const formatDate = (dateStr: string) => {
     const parts = dateStr.split('-');
@@ -31,7 +31,7 @@ export default function DailySummaryList({ data, onDayPress }: DailySummaryListP
   };
 
   const renderItem = ({ item }: { item: DaySummary }) => {
-    const net = item.income - item.expense;
+    const net = item.entry - item.expense;
     return (
       <TouchableOpacity
         style={styles.row}
@@ -40,8 +40,8 @@ export default function DailySummaryList({ data, onDayPress }: DailySummaryListP
       >
         <Text style={styles.dateText}>{formatDate(item.date)}</Text>
         <View style={styles.amounts}>
-          {item.income > 0 && (
-            <Text style={styles.incomeText}>+{item.income.toFixed(2)}</Text>
+          {item.entry > 0 && (
+            <Text style={styles.incomeText}>+{item.entry.toFixed(2)}</Text>
           )}
           {item.expense > 0 && (
             <Text style={styles.expenseText}>-{item.expense.toFixed(2)}</Text>

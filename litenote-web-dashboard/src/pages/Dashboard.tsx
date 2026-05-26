@@ -41,12 +41,12 @@ const Dashboard: React.FC = () => {
 
   const billTypeTag = (type: string) => {
     switch (type) {
-      case 'income':
-        return <Tag color="green">收入</Tag>;
+      case 'entry':
+        return <Tag color="green">入账</Tag>;
       case 'expense':
         return <Tag color="red">支出</Tag>;
-      case 'credit':
-        return <Tag color="orange">赊账</Tag>;
+      case 'settlement':
+        return <Tag color="blue">结清</Tag>;
       default:
         return <Tag>{type}</Tag>;
     }
@@ -73,7 +73,7 @@ const Dashboard: React.FC = () => {
       key: 'amount',
       width: 100,
       render: (amount: number, record: Bill) => (
-        <span style={{ color: record.type === 'income' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#fa8c16', fontWeight: 600 }}>
+        <span style={{ color: record.type === 'entry' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#1890ff', fontWeight: 600 }}>
           {record.type === 'expense' ? '-' : '+'}{Number(amount).toFixed(2)}
         </span>
       ),
@@ -116,7 +116,7 @@ const Dashboard: React.FC = () => {
       ),
     },
     {
-      title: '赊账笔数',
+      title: '未结清笔数',
       dataIndex: 'billCount',
       key: 'billCount',
     },
@@ -157,7 +157,7 @@ const Dashboard: React.FC = () => {
           <Card hoverable>
             <Statistic
               title="本月营业额"
-              value={(stats?.totalIncome || 0) + (stats?.totalExpense || 0)}
+              value={stats?.totalRevenue || 0}
               precision={2}
               prefix={<RiseOutlined />}
               valueStyle={{ color: '#52c41a' }}
@@ -168,8 +168,8 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card hoverable>
             <Statistic
-              title="本月赊账"
-              value={stats?.monthlyCredit || 0}
+              title="本月入账"
+              value={stats?.monthlyEntry || 0}
               precision={2}
               prefix={<CreditCardOutlined />}
               valueStyle={{ color: '#fa8c16' }}
@@ -181,7 +181,7 @@ const Dashboard: React.FC = () => {
           <Card hoverable>
             <Statistic
               title="本月结清"
-              value={stats?.monthlySettledCredits || 0}
+              value={stats?.monthlySettled || 0}
               precision={2}
               prefix={<DollarOutlined />}
               valueStyle={{ color: '#1890ff' }}
@@ -192,8 +192,8 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card hoverable>
             <Statistic
-              title="未结算赊账"
-              value={stats?.totalUnsettledCredits || 0}
+              title="未结清"
+              value={stats?.unsettledAmount || 0}
               precision={2}
               prefix={<CreditCardOutlined />}
               valueStyle={{ color: '#722ed1' }}
@@ -240,7 +240,7 @@ const Dashboard: React.FC = () => {
         </Col>
         <Col xs={24} lg={10}>
           <Card
-            title="欠款客户"
+            title="未结清客户"
             extra={<Button type="link" onClick={() => navigate('/customers')}>查看全部</Button>}
           >
             <Table
@@ -249,7 +249,7 @@ const Dashboard: React.FC = () => {
               rowKey="customerId"
               pagination={false}
               size="small"
-              locale={{ emptyText: '暂无欠款客户' }}
+              locale={{ emptyText: '暂无未结清客户' }}
             />
           </Card>
         </Col>

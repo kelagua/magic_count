@@ -37,7 +37,7 @@ const StatisticsScreen: React.FC = () => {
   const [expenseCategoryStats, setExpenseCategoryStats] = useState<
     CategoryStatistic[]
   >([]);
-  const [incomeCategoryStats, setIncomeCategoryStats] = useState<
+  const [entryCategoryStats, setEntryCategoryStats] = useState<
     CategoryStatistic[]
   >([]);
   const [loading, setLoading] = useState(false);
@@ -83,7 +83,7 @@ const StatisticsScreen: React.FC = () => {
       if (response.success && response.data) {
         setStatistics(response.data);
         setExpenseCategoryStats(response.data.expenseCategoryStats || []);
-        setIncomeCategoryStats(response.data.incomeCategoryStats || []);
+        setEntryCategoryStats(response.data.entryCategoryStats || []);
       }
     } catch (error: any) {
       showError(error.message || '加载统计数据失败');
@@ -102,13 +102,13 @@ const StatisticsScreen: React.FC = () => {
     return expenseColors[index % expenseColors.length];
   };
 
-  // 收入分类颜色（冷色调）
-  const getIncomeCategoryColor = (index: number): string => {
-    const incomeColors = [
+  // 入账分类颜色（冷色调）
+  const getEntryCategoryColor = (index: number): string => {
+    const entryColors = [
       '#00B894', '#4ECDC4', '#45B7D1', '#74B9FF', '#A8E6CF',
       '#81ECEC', '#00CEC9', '#0984E3', '#6C5CE7', '#A29BFE',
     ];
-    return incomeColors[index % incomeColors.length];
+    return entryColors[index % entryColors.length];
   };
 
   // 月度趋势数据
@@ -131,7 +131,7 @@ const StatisticsScreen: React.FC = () => {
   };
 
   const expensePercent = statistics
-    ? ((statistics.totalExpense / (statistics.totalIncome || 1)) * 100).toFixed(1)
+    ? ((statistics.totalExpense / (statistics.totalEntry || 1)) * 100).toFixed(1)
     : '0';
 
   return (
@@ -191,7 +191,7 @@ const StatisticsScreen: React.FC = () => {
                         showLegend={false}
                       />
                       <View style={styles.chartCenterText}>
-                        <Text style={styles.centerLabel}>总赊账</Text>
+                        <Text style={styles.centerLabel}>总支出</Text>
                         <Text style={styles.centerValue}>
                           ¥{statistics.totalExpense.toFixed(0)}
                         </Text>
@@ -232,9 +232,9 @@ const StatisticsScreen: React.FC = () => {
                     <View style={styles.emptyChartIcon}>
                       <Text style={styles.emptyChartIconText}>📊</Text>
                     </View>
-                    <Text style={styles.emptyChartTitle}>暂无赊账数据</Text>
+                    <Text style={styles.emptyChartTitle}>暂无支出数据</Text>
                     <Text style={styles.emptyChartSubtitle}>
-                      开始记录赊账，查看分类占比
+                      开始记录支出，查看分类占比
                     </Text>
                   </View>
                 </View>
@@ -244,35 +244,35 @@ const StatisticsScreen: React.FC = () => {
               <View style={styles.statsGrid}>
                 <View style={styles.statCard}>
                   <Text style={[styles.statValue, styles.incomeValue]}>
-                    ¥{statistics?.totalIncome.toFixed(2) || '0.00'}
+                    ¥{statistics?.totalEntry.toFixed(2) || '0.00'}
                   </Text>
-                  <Text style={styles.statLabel}>总回款</Text>
+                  <Text style={styles.statLabel}>总入账</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={[styles.statValue, styles.expenseValue]}>
                     ¥{statistics?.totalExpense.toFixed(2) || '0.00'}
                   </Text>
-                  <Text style={styles.statLabel}>总赊账</Text>
+                  <Text style={styles.statLabel}>总支出</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={styles.statValue}>
-                    ¥{statistics?.balance.toFixed(2) || '0.00'}
+                    ¥{statistics ? (statistics.totalEntry - statistics.totalSettlement - statistics.totalExpense).toFixed(2) : '0.00'}
                   </Text>
                   <Text style={styles.statLabel}>往来差额</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={styles.statValue}>{expensePercent}%</Text>
-                  <Text style={styles.statLabel}>赊账占比</Text>
+                  <Text style={styles.statLabel}>支出占比</Text>
                 </View>
               </View>
 
-              {/* 收入分类占比 */}
-              <Text style={styles.sectionTitle}>💰 回款分类占比</Text>
-              {incomeCategoryStats.length > 0 &&
+              {/* 入账分类占比 */}
+              <Text style={styles.sectionTitle}>💰 入账分类占比</Text>
+              {entryCategoryStats.length > 0 &&
               statistics &&
-              statistics.totalIncome > 0 ? (
+              statistics.totalEntry > 0 ? (
                 <View style={styles.categoryList}>
-                  {incomeCategoryStats.map((stat, index) => (
+                  {entryCategoryStats.map((stat, index) => (
                     <View key={index} style={styles.categoryItem}>
                       <View style={styles.categoryLeft}>
                         <Text style={styles.categoryIcon}>
@@ -288,7 +288,7 @@ const StatisticsScreen: React.FC = () => {
                             styles.categoryProgress,
                             {
                               width: `${stat.percentage}%`,
-                              backgroundColor: getIncomeCategoryColor(index),
+                              backgroundColor: getEntryCategoryColor(index),
                             },
                           ]}
                         />

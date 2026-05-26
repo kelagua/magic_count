@@ -35,13 +35,13 @@ export default function YearlyView({ onJumpToMonthly }: YearlyViewProps) {
     const monthlyForYear = selectedYear ? getMonthlyDataForYear(selectedYear) : [];
     const result = Array.from({ length: 12 }, (_, i) => ({
       month: i + 1,
-      income: 0,
+      entry: 0,
       expense: 0,
     }));
     monthlyForYear.forEach((m) => {
       const item = result.find((r) => r.month === m.month);
       if (item) {
-        item.income = m.income;
+        item.entry = m.entry;
         item.expense = m.expense;
       }
     });

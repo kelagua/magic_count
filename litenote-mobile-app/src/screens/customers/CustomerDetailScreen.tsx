@@ -1,6 +1,6 @@
 /**
  * 客户详情页面 - Neo-Brutalism 风格
- * 显示客户信息、未结清赊账、账单列表
+ * 显示客户信息、未结清入账、账单列表
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -50,7 +50,7 @@ export default function CustomerDetailScreen() {
       setCustomer(customerRes.data || null);
       const allBills = billsRes.data || [];
       setBills(allBills);
-      setUnsettledBills(allBills.filter(b => b.type === 'credit' && !b.isSettled));
+      setUnsettledBills(allBills.filter(b => b.type === 'entry' && !b.isSettled));
     } catch (error: any) {
       showError(error.message || '获取客户信息失败');
     } finally {
@@ -149,12 +149,12 @@ export default function CustomerDetailScreen() {
           )}
         </View>
 
-        {/* 赊账概览 */}
+        {/* 未结清概览 */}
         <View style={styles.creditCard}>
           <View style={styles.creditHeader}>
             <View style={styles.creditTitleRow}>
               <Text style={styles.sectionSticker}>💳</Text>
-              <Text style={styles.creditTitle}>赊账概览</Text>
+              <Text style={styles.creditTitle}>未结清概览</Text>
             </View>
             {unsettledBills.length > 0 && (
               <TouchableOpacity
@@ -184,7 +184,7 @@ export default function CustomerDetailScreen() {
         {unsettledBills.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>未结清赊账</Text>
+              <Text style={styles.sectionTitle}>未结清入账</Text>
             </View>
             {unsettledBills.map((bill) => (
               <View key={bill.id} style={styles.billItem}>
@@ -194,7 +194,7 @@ export default function CustomerDetailScreen() {
                   </View>
                   <View style={styles.billInfo}>
                     <Text style={styles.billDescription}>
-                      {bill.description || bill.category?.name || '赊账'}
+                      {bill.description || bill.category?.name || '入账'}
                     </Text>
                     <Text style={styles.billDate}>
                       {new Date(bill.date).toLocaleDateString('zh-CN', {
@@ -225,10 +225,10 @@ export default function CustomerDetailScreen() {
                 <View style={styles.billLeft}>
                   <View style={[
                     styles.billIconBlock,
-                    { backgroundColor: bill.type === 'income' ? styles._colors.success : bill.type === 'credit' ? styles._colors.warning : styles._colors.accent },
+                    { backgroundColor: bill.type === 'entry' ? styles._colors.success : bill.type === 'settlement' ? styles._colors.primary : styles._colors.accent },
                   ]}>
                     <Text style={styles.billIconText}>
-                      {bill.type === 'income' ? '↗' : bill.type === 'credit' ? '⏳' : '↘'}
+                      {bill.type === 'entry' ? '↗' : bill.type === 'settlement' ? '✓' : '↘'}
                     </Text>
                   </View>
                   <View style={styles.billInfo}>
@@ -240,17 +240,17 @@ export default function CustomerDetailScreen() {
                         month: 'short',
                         day: 'numeric',
                       })}
-                      {bill.isSettled ? ' · 已结清' : bill.type === 'credit' ? ' · 未结清' : ''}
+                      {bill.isSettled ? ' · 已结清' : bill.type === 'entry' ? ' · 未结清' : ''}
                     </Text>
                   </View>
                 </View>
                 <View style={[
                   styles.amountBadge,
-                  bill.type === 'income' ? styles.incomeBadge : styles.expenseBadge,
+                  bill.type === 'entry' || bill.type === 'settlement' ? styles.incomeBadge : styles.expenseBadge,
                 ]}>
                   <Text style={[
                     styles.billAmount,
-                    bill.type === 'income' ? styles.incomeAmount : styles.expenseAmount,
+                    bill.type === 'entry' || bill.type === 'settlement' ? styles.incomeAmount : styles.expenseAmount,
                   ]}>
                     {bill.type === 'expense' ? '-' : '+'}¥{Number(bill.amount).toFixed(2)}
                   </Text>
@@ -388,7 +388,7 @@ const createStyles = (colors: ThemeColors) => ({
       color: colors.textSecondary,
       flex: 1,
     },
-    // 赊账概览
+    // 未结清概览
     creditCard: {
       backgroundColor: colors.surface,
       borderRadius: borderRadius.card,

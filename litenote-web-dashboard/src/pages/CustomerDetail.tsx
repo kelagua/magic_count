@@ -79,7 +79,7 @@ const CustomerDetail: React.FC = () => {
   const fetchUnsettledBills = async () => {
     try {
       const res = await customersApi.getCustomerBills(Number(id), {
-        type: 'credit',
+        type: 'entry',
         isSettled: false,
         limit: 100,
       });
@@ -91,7 +91,7 @@ const CustomerDetail: React.FC = () => {
 
   const handleSettleBatch = async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要结算的赊账记录');
+      message.warning('请选择要结清的入账记录');
       return;
     }
     setSettleModalOpen(true);
@@ -105,7 +105,7 @@ const CustomerDetail: React.FC = () => {
         paymentMethod: settlePaymentMethod,
       });
       if (res.success) {
-        message.success(`成功结算 ${res.data?.settledCount || 0} 笔赊账，总金额 ${(res.data?.totalAmount || 0).toFixed(2)} 元`);
+        message.success(`成功结清 ${res.data?.settledCount || 0} 笔入账，总金额 ${(res.data?.totalAmount || 0).toFixed(2)} 元`);
         setSettleModalOpen(false);
         setSelectedRowKeys([]);
         fetchBills(pagination.page);
@@ -120,9 +120,9 @@ const CustomerDetail: React.FC = () => {
 
   const billTypeTag = (type: string) => {
     switch (type) {
-      case 'income': return <Tag color="green">收入</Tag>;
+      case 'entry': return <Tag color="green">入账</Tag>;
       case 'expense': return <Tag color="red">支出</Tag>;
-      case 'credit': return <Tag color="orange">赊账</Tag>;
+      case 'settlement': return <Tag color="blue">结清</Tag>;
       default: return <Tag>{type}</Tag>;
     }
   };
@@ -150,7 +150,7 @@ const CustomerDetail: React.FC = () => {
       key: 'amount',
       width: 120,
       render: (amount: number, record: Bill) => (
-        <span style={{ color: record.type === 'income' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#fa8c16', fontWeight: 600 }}>
+        <span style={{ color: record.type === 'entry' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#1890ff', fontWeight: 600 }}>
           {record.type === 'expense' ? '-' : '+'}{Number(amount).toFixed(2)}
         </span>
       ),
@@ -173,10 +173,10 @@ const CustomerDetail: React.FC = () => {
       key: 'settled',
       width: 100,
       render: (_: unknown, record: Bill) => {
-        if (record.type !== 'credit') return '-';
+        if (record.type !== 'entry') return '-';
         return record.isSettled
-          ? <Tag color="green" icon={<CheckCircleOutlined />}>已结算</Tag>
-          : <Tag color="volcano">未结算</Tag>;
+          ? <Tag color="green" icon={<CheckCircleOutlined />}>已结清</Tag>
+          : <Tag color="volcano">未结清</Tag>;
       },
     },
   ];
@@ -225,7 +225,7 @@ const CustomerDetail: React.FC = () => {
           <Col xs={24} md={8}>
             <Card>
               <Statistic
-                title="未结算赊账总额"
+                title="未结清总额"
                 value={totalUnsettled}
                 precision={2}
                 prefix={<DollarOutlined />}
@@ -233,17 +233,17 @@ const CustomerDetail: React.FC = () => {
                 suffix="元"
               />
               <div style={{ marginTop: 8, color: '#999' }}>
-                共 {unsettledBills.length} 笔未结算赊账
+                共 {unsettledBills.length} 笔未结清入账
               </div>
             </Card>
           </Col>
         </Row>
       </Card>
 
-      {/* 未结算赊账 - 批量结算 */}
+      {/* 未结清入账 - 批量结清 */}
       {unsettledBills.length > 0 && (
         <Card
-          title="未结算赊账"
+          title="未结清入账"
           style={{ marginBottom: 16 }}
           extra={
             selectedRowKeys.length > 0 ? (
@@ -252,7 +252,7 @@ const CustomerDetail: React.FC = () => {
                 onClick={handleSettleBatch}
                 style={{ borderColor: '#fa8c16', color: '#fa8c16' }}
               >
-                批量结算 ({selectedRowKeys.length})
+                批量结清 ({selectedRowKeys.length})
               </Button>
             ) : null
           }
@@ -285,9 +285,9 @@ const CustomerDetail: React.FC = () => {
               value={filterType}
               onChange={(val) => { setFilterType(val); }}
               options={[
-                { label: '收入', value: 'income' },
+                { label: '入账', value: 'entry' },
                 { label: '支出', value: 'expense' },
-                { label: '赊账', value: 'credit' },
+                { label: '结清', value: 'settlement' },
               ]}
             />
             <Select
@@ -297,8 +297,8 @@ const CustomerDetail: React.FC = () => {
               value={filterIsSettled}
               onChange={(val) => { setFilterIsSettled(val); }}
               options={[
-                { label: '已结算', value: true },
-                { label: '未结算', value: false },
+                { label: '已结清', value: true },
+                { label: '未结清', value: false },
               ]}
             />
             <Button type="primary" onClick={() => fetchBills(1)}>筛选</Button>
@@ -321,18 +321,18 @@ const CustomerDetail: React.FC = () => {
         />
       </Card>
 
-      {/* 批量结算弹窗 */}
+      {/* 批量结清弹窗 */}
       <Modal
-        title="批量结算赊账"
+        title="批量结清入账"
         open={settleModalOpen}
         onOk={confirmSettleBatch}
         onCancel={() => setSettleModalOpen(false)}
         confirmLoading={settleLoading}
-        okText="确认结算"
+        okText="确认结清"
         cancelText="取消"
       >
         <div>
-          <p>已选择 <strong>{selectedRowKeys.length}</strong> 笔赊账记录进行结算</p>
+          <p>已选择 <strong>{selectedRowKeys.length}</strong> 笔入账记录进行结清</p>
           <div style={{ marginTop: 8 }}>
             <span>还款方式：</span>
             <Select

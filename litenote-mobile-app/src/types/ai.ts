@@ -51,7 +51,7 @@ export interface ParseBillRequest {
 // 解析后的账单
 export interface ParsedBill {
   amount: number;
-  type: 'income' | 'expense';
+  type: 'entry' | 'expense';
   categoryName: string;
   description: string;
   date: string;

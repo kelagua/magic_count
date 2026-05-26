@@ -14,7 +14,7 @@ const NUM_COLS = 3;
 const GAP = spacing.sm;
 
 interface YearGridProps {
-  years: Array<{ year: number; income: number; expense: number }>;
+  years: Array<{ year: number; entry: number; expense: number }>;
   selectedYear: number | null;
   onYearPress: (year: number) => void;
 }
@@ -33,13 +33,13 @@ export default function YearGrid({
   return (
     <View style={styles.container}>
       <View style={styles.grid}>
-        {years.map(({ year, income, expense }) => {
+        {years.map(({ year, entry, expense }) => {
           const isFuture = year > currentYear;
           return (
             <View key={year} style={{ marginRight: years.indexOf(years.find(y => y.year === year)!) % NUM_COLS === NUM_COLS - 1 ? 0 : GAP, marginBottom: GAP }}>
               <GridCell
                 label={String(year)}
-                income={isFuture ? 0 : income}
+                entry={isFuture ? 0 : entry}
                 expense={isFuture ? 0 : expense}
                 isSelected={selectedYear === year}
                 isCurrentPeriod={year === currentYear}

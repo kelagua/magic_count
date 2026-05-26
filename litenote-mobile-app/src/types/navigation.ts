@@ -28,13 +28,13 @@ declare global {
       // 记账功能
       CreateBill: {
         bill?: BillData;
-        initialType?: 'income' | 'expense' | 'credit';
+        initialType?: 'entry' | 'expense';
       };
       EditBill: {
         billId: number;
       };
       AllBills: {
-        initialFilter?: 'all' | 'income' | 'expense';
+        initialFilter?: 'all' | 'entry' | 'expense' | 'settlement';
       } | undefined;
       Statistics: undefined;
       Categories: undefined;
@@ -46,7 +46,7 @@ declare global {
           start: string;
           end: string;
         };
-        type?: 'income' | 'expense' | 'all';
+        type?: 'entry' | 'expense' | 'all';
       };
 
       // 账单详情

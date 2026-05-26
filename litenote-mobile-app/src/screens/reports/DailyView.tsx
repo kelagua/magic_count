@@ -116,8 +116,8 @@ export default function DailyView({
             </Text>
             {selectedDayData && (
               <View style={styles.daySummary}>
-                {selectedDayData.income > 0 && (
-                  <Text style={styles.incomeText}>收 +{selectedDayData.income.toFixed(2)}</Text>
+                {selectedDayData.entry > 0 && (
+                  <Text style={styles.incomeText}>收 +{selectedDayData.entry.toFixed(2)}</Text>
                 )}
                 {selectedDayData.expense > 0 && (
                   <Text style={styles.expenseText}>支 -{selectedDayData.expense.toFixed(2)}</Text>

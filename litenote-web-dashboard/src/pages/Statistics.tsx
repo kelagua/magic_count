@@ -159,9 +159,18 @@ const Statistics: React.FC = () => {
             <Legend />
             <Line
               type="monotone"
-              dataKey="income"
-              name="收入"
+              dataKey="entry"
+              name="入账"
               stroke="#52c41a"
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="settlement"
+              name="结清"
+              stroke="#1890ff"
               strokeWidth={2}
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
@@ -201,7 +210,8 @@ const Statistics: React.FC = () => {
               formatter={(value: number) => `${value.toFixed(2)} 元`}
             />
             <Legend />
-            <Bar dataKey="income" name="收入" fill="#52c41a" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="entry" name="入账" fill="#52c41a" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="settlement" name="结清" fill="#1890ff" radius={[2, 2, 0, 0]} />
             <Bar dataKey="expense" name="支出" fill="#ff4d4f" radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -246,7 +256,7 @@ const Statistics: React.FC = () => {
               <Card hoverable>
                 <Statistic
                   title="总收入"
-                  value={stats?.totalIncome || 0}
+                  value={stats?.totalEntry || 0}
                   precision={2}
                   prefix={<RiseOutlined />}
                   valueStyle={{ color: '#52c41a' }}
@@ -270,10 +280,10 @@ const Statistics: React.FC = () => {
               <Card hoverable>
                 <Statistic
                   title="结余"
-                  value={stats?.balance || 0}
+                  value={(stats?.totalEntry || 0) - (stats?.totalExpense || 0)}
                   precision={2}
                   prefix={<WalletOutlined />}
-                  valueStyle={{ color: (stats?.balance || 0) >= 0 ? '#52c41a' : '#ff4d4f' }}
+                  valueStyle={{ color: ((stats?.totalEntry || 0) - (stats?.totalExpense || 0)) >= 0 ? '#52c41a' : '#ff4d4f' }}
                   suffix="元"
                 />
               </Card>
@@ -291,9 +301,9 @@ const Statistics: React.FC = () => {
             </Col>
             <Col xs={24} lg={12}>
               {renderPieChart(
-                stats?.incomeCategoryStats || [],
-                '收入分类占比',
-                stats?.totalIncome || 0,
+                stats?.entryCategoryStats || [],
+                '入账分类占比',
+                stats?.totalEntry || 0,
               )}
             </Col>
           </Row>

@@ -13,7 +13,7 @@ import AssetCompositionChart from '../../components/reports/AssetCompositionChar
 
 export default function AssetsTab() {
   const styles = useStyles(createStyles);
-  const { netWorth, totalIncome, totalExpense, assetTrendData, trendDateRange, incomeCategoryStats, expenseCategoryStats, isLoading, refetch } = useAssetsData();
+  const { netWorth, totalEntry, totalExpense, assetTrendData, trendDateRange, entryCategoryStats, expenseCategoryStats, isLoading, refetch } = useAssetsData();
 
   const formatCurrency = (val: number) => {
     if (Math.abs(val) >= 10000) {
@@ -40,7 +40,7 @@ export default function AssetsTab() {
           <View style={styles.balanceItem}>
             <Text style={styles.balanceItemLabel}>总回款</Text>
             <Text style={[styles.balanceItemValue, { color: '#4ADE80' }]}>
-              {formatCurrency(totalIncome)}
+              {formatCurrency(totalEntry)}
             </Text>
           </View>
           <View style={styles.balanceDivider} />
@@ -58,7 +58,7 @@ export default function AssetsTab() {
 
       {/* 收支分类构成饼图 */}
       <AssetCompositionChart
-        incomeCategoryStats={incomeCategoryStats}
+        incomeCategoryStats={entryCategoryStats}
         expenseCategoryStats={expenseCategoryStats}
         dateRange={trendDateRange}
       />

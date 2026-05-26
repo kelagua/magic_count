@@ -51,7 +51,7 @@ export default function CategoryAnalysisScreen() {
       if (stats.success && stats.data) {
         const categoryStats = typeFilter === 'expense'
           ? stats.data.expenseCategoryStats
-          : stats.data.incomeCategoryStats;
+          : stats.data.entryCategoryStats;
 
         if (categoryStats && categoryStats.length > 0) {
           const sorted = [...categoryStats].sort((a, b) => Number(b.amount) - Number(a.amount));

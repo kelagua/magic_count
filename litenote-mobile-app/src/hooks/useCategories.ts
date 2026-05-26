@@ -9,14 +9,16 @@ import type { BillType } from '../types/bill';
 
 /**
  * 获取分类列表
- * @param type 分类类型（income/expense）
+ * @param type 分类类型（entry/expense）
  * @param enabled 是否启用查询
  */
 export function useCategories(type: BillType, enabled: boolean = true) {
+  // settlement 类型没有独立分类，映射为 entry
+  const categoryType = type === 'settlement' ? 'entry' : type;
   const query = useQuery({
-    queryKey: QUERY_KEYS.categories.byType(type),
+    queryKey: QUERY_KEYS.categories.byType(categoryType),
     queryFn: async () => {
-      const response = await categoriesService.getCategories(type as 'income' | 'expense' | 'credit');
+      const response = await categoriesService.getCategories(categoryType);
       if (response.success && response.data) {
         return response.data;
       }

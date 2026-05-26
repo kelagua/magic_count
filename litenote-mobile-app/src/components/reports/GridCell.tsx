@@ -11,7 +11,7 @@ import { useStyles } from '../../hooks';
 
 interface GridCellProps {
   label: string;
-  income: number;
+  entry: number;
   expense: number;
   isSelected: boolean;
   isCurrentPeriod?: boolean;
@@ -29,7 +29,7 @@ const formatAmount = (val: number) => {
 
 function GridCell({
   label,
-  income,
+  entry,
   expense,
   isSelected,
   isCurrentPeriod = false,
@@ -40,7 +40,7 @@ function GridCell({
 }: GridCellProps) {
   const styles = useStyles(createStyles);
 
-  const hasData = income > 0 || expense > 0;
+  const hasData = entry > 0 || expense > 0;
 
   return (
     <TouchableOpacity
@@ -74,7 +74,7 @@ function GridCell({
       </Text>
       {!disabled && hasData ? (
         <View style={styles.amountWrap}>
-          {income > 0 && (
+          {entry > 0 && (
             <Text
               style={[
                 styles.incomeText,
@@ -82,7 +82,7 @@ function GridCell({
               ]}
               numberOfLines={1}
             >
-              {formatAmount(income)}
+              {formatAmount(entry)}
             </Text>
           )}
           {expense > 0 && (

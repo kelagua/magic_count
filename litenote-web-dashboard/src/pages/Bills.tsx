@@ -179,7 +179,7 @@ const Bills: React.FC = () => {
   // 批量结算
   const handleSettleBatch = async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要结算的赊账记录');
+      message.warning('请选择要结清的入账记录');
       return;
     }
     setSettleModalOpen(true);
@@ -193,7 +193,7 @@ const Bills: React.FC = () => {
         paymentMethod: settlePaymentMethod,
       });
       if (res.success) {
-        message.success(`成功结算 ${res.data?.settledCount || 0} 笔赊账，总金额 ${(res.data?.totalAmount || 0).toFixed(2)} 元`);
+        message.success(`成功结清 ${res.data?.settledCount || 0} 笔入账，总金额 ${(res.data?.totalAmount || 0).toFixed(2)} 元`);
         setSettleModalOpen(false);
         setSelectedRowKeys([]);
         fetchBills(pagination.page);
@@ -207,9 +207,9 @@ const Bills: React.FC = () => {
 
   const billTypeTag = (type: string) => {
     switch (type) {
-      case 'income': return <Tag color="green">收入</Tag>;
+      case 'entry': return <Tag color="green">入账</Tag>;
       case 'expense': return <Tag color="red">支出</Tag>;
-      case 'credit': return <Tag color="orange">赊账</Tag>;
+      case 'settlement': return <Tag color="blue">结清</Tag>;
       default: return <Tag>{type}</Tag>;
     }
   };
@@ -237,7 +237,7 @@ const Bills: React.FC = () => {
       width: 120,
       sorter: true,
       render: (amount: number, record: Bill) => (
-        <span style={{ color: record.type === 'income' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#fa8c16', fontWeight: 600 }}>
+        <span style={{ color: record.type === 'entry' ? '#52c41a' : record.type === 'expense' ? '#ff4d4f' : '#1890ff', fontWeight: 600 }}>
           {record.type === 'expense' ? '-' : '+'}{Number(amount).toFixed(2)}
         </span>
       ),
@@ -263,7 +263,7 @@ const Bills: React.FC = () => {
       key: 'customer',
       width: 100,
       render: (customer: Bill['customer'], record: Bill) => {
-        if (record.type === 'credit') {
+        if (record.type === 'entry') {
           return customer?.name || '-';
         }
         return '-';
@@ -274,10 +274,10 @@ const Bills: React.FC = () => {
       key: 'settled',
       width: 100,
       render: (_: unknown, record: Bill) => {
-        if (record.type !== 'credit') return '-';
+        if (record.type !== 'entry') return '-';
         return record.isSettled
-          ? <Tag color="green" icon={<CheckCircleOutlined />}>已结算</Tag>
-          : <Tag color="volcano">未结算</Tag>;
+          ? <Tag color="green" icon={<CheckCircleOutlined />}>已结清</Tag>
+          : <Tag color="volcano">未结清</Tag>;
       },
     },
     {
@@ -319,9 +319,9 @@ const Bills: React.FC = () => {
               value={filterType}
               onChange={setFilterType}
               options={[
-                { label: '收入', value: 'income' },
+                { label: '入账', value: 'entry' },
                 { label: '支出', value: 'expense' },
-                { label: '赊账', value: 'credit' },
+                { label: '结清', value: 'settlement' },
               ]}
             />
           </Col>
@@ -355,8 +355,8 @@ const Bills: React.FC = () => {
               value={filterIsSettled}
               onChange={setFilterIsSettled}
               options={[
-                { label: '已结算', value: true },
-                { label: '未结算', value: false },
+                { label: '已结清', value: true },
+                { label: '未结清', value: false },
               ]}
             />
           </Col>
@@ -391,7 +391,7 @@ const Bills: React.FC = () => {
                 onClick={handleSettleBatch}
                 style={{ borderColor: '#fa8c16', color: '#fa8c16' }}
               >
-                批量结算 ({selectedRowKeys.length})
+                批量结清 ({selectedRowKeys.length})
               </Button>
             )}
           </Space>
@@ -407,7 +407,7 @@ const Bills: React.FC = () => {
             selectedRowKeys,
             onChange: setSelectedRowKeys,
             getCheckboxProps: (record: Bill) => ({
-              disabled: record.type !== 'credit' || record.isSettled,
+              disabled: record.type !== 'entry' || record.isSettled,
             }),
           }}
           pagination={{
@@ -443,9 +443,9 @@ const Bills: React.FC = () => {
               >
                 <Select
                   options={[
-                    { label: '收入', value: 'income' },
+                    { label: '入账', value: 'entry' },
                     { label: '支出', value: 'expense' },
-                    { label: '赊账', value: 'credit' },
+                    { label: '结清', value: 'settlement' },
                   ]}
                 />
               </Form.Item>
@@ -479,11 +479,11 @@ const Bills: React.FC = () => {
               options={categories.map((c) => ({ label: `${c.icon || ''} ${c.name}`, value: c.id }))}
             />
           </Form.Item>
-          {watchType === 'credit' && (
+          {watchType === 'entry' && (
             <Form.Item
               name="customerId"
               label="客户"
-              rules={watchType === 'credit' ? [{ required: true, message: '赊账必须选择客户' }] : []}
+              rules={watchType === 'entry' ? [{ required: true, message: '入账必须选择客户' }] : []}
             >
               <Select
                 allowClear
@@ -500,18 +500,18 @@ const Bills: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 批量结算弹窗 */}
+      {/* 批量结清弹窗 */}
       <Modal
-        title="批量结算赊账"
+        title="批量结清入账"
         open={settleModalOpen}
         onOk={confirmSettleBatch}
         onCancel={() => setSettleModalOpen(false)}
         confirmLoading={settleLoading}
-        okText="确认结算"
+        okText="确认结清"
         cancelText="取消"
       >
         <div style={{ marginBottom: 16 }}>
-          <p>已选择 <strong>{selectedRowKeys.length}</strong> 笔赊账记录进行结算</p>
+          <p>已选择 <strong>{selectedRowKeys.length}</strong> 笔入账记录进行结清</p>
           <div style={{ marginTop: 8 }}>
             <span>还款方式：</span>
             <Select

@@ -39,7 +39,7 @@ async function fetchDashboardData(month: string): Promise<DashboardData> {
   ]);
 
   const stats = statsResponse.data;
-  const monthIncome = stats?.totalIncome || 0;
+  const monthIncome = stats?.totalEntry || 0;
   const monthExpense = stats?.totalExpense || 0;
 
   return {

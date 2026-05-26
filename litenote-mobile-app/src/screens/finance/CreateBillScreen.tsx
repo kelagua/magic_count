@@ -1,7 +1,7 @@
 /**
  * 创建/编辑账单屏幕 - Neo-Brutalism 风格
  * 描边金额输入 + 糖果色类型切换 + 描边分类网格
- * 支持赊账(credit)类型，选择客户
+ * 支持入账(entry)类型，选择客户；结清(settlement)类型
  */
 import React, { useState } from 'react';
 import {
@@ -65,13 +65,13 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
   const [description, setDescription] = useState(editingBill?.description || '');
   const [loading, setLoading] = useState(false);
 
-  // 赊账相关
+  // 入账相关
   const [customerId, setCustomerId] = useState<number | undefined>(editingBill?.customerId);
   const [customerName, setCustomerName] = useState(editingBill?.customer?.name || '');
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
 
-  const { categories } = useCategories(type === 'credit' ? 'expense' : type);
+  const { categories } = useCategories(type === 'entry' ? 'expense' : type);
 
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -80,7 +80,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
   const handleTypeChange = (newType: BillType) => {
     setType(newType);
     setSelectedCategory(null);
-    if (newType !== 'credit') {
+    if (newType !== 'entry') {
       setCustomerId(undefined);
       setCustomerName('');
     }
@@ -172,8 +172,8 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
       showError('请选择分类');
       return false;
     }
-    if (type === 'credit' && !customerId) {
-      showError('赊账需要选择客户');
+    if (type === 'entry' && !customerId) {
+      showError('入账需要选择客户');
       return false;
     }
     return true;
@@ -191,7 +191,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
           ? new Date(editingBill!.date).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0],
         categoryId: selectedCategory!.id,
-        ...(type === 'credit' && customerId ? { customerId } : {}),
+        ...(type === 'entry' && customerId ? { customerId } : {}),
       };
       let response;
       if (isEditing) {
@@ -209,7 +209,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
             amount: parseFloat(amount),
             type,
             description,
-            customerName: type === 'credit' ? customerName : undefined,
+            customerName: type === 'entry' ? customerName : undefined,
           });
         }
 
@@ -255,7 +255,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* 赊账/回款/赊账(credit) 切换 */}
+          {/* 支出/入账/结清 切换 */}
           <View style={styles.typeSelector}>
             <TouchableOpacity
               style={[styles.typeButton, type === 'expense' && styles.typeButtonExpenseActive]}
@@ -266,25 +266,25 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.typeButton, type === 'income' && styles.typeButtonIncomeActive]}
-              onPress={() => handleTypeChange('income')}
+              style={[styles.typeButton, type === 'entry' && styles.typeButtonEntryActive]}
+              onPress={() => handleTypeChange('entry')}
             >
-              <Text style={[styles.typeButtonText, type === 'income' && styles.typeButtonTextActive]}>
-                回款
+              <Text style={[styles.typeButtonText, type === 'entry' && styles.typeButtonTextActive]}>
+                入账
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.typeButton, type === 'credit' && styles.typeButtonCreditActive]}
-              onPress={() => handleTypeChange('credit')}
+              style={[styles.typeButton, type === 'settlement' && styles.typeButtonSettlementActive]}
+              onPress={() => handleTypeChange('settlement')}
             >
-              <Text style={[styles.typeButtonText, type === 'credit' && styles.typeButtonTextActive]}>
-                赊账
+              <Text style={[styles.typeButtonText, type === 'settlement' && styles.typeButtonTextActive]}>
+                结清
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* 客户选择 - 仅赊账类型显示 */}
-          {type === 'credit' && (
+          {/* 客户选择 - 仅入账类型显示 */}
+          {type === 'entry' && (
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>👤 客户</Text>
               <TouchableOpacity
@@ -384,7 +384,7 @@ const CreateBillScreen: React.FC<CreateBillScreenProps> = ({ navigation, route }
         visible={showAddCategoryModal}
         onClose={() => setShowAddCategoryModal(false)}
         onSuccess={handleAddCategorySuccess}
-        billType={type === 'credit' ? 'expense' : type}
+        billType={type === 'entry' ? 'expense' : type}
       />
 
       <ConfirmModal
@@ -440,13 +440,13 @@ const createStyles = (colors: ThemeColors) => ({
       borderWidth: borderWidth.thin,
       borderColor: colors.stroke,
     },
-    typeButtonIncomeActive: {
+    typeButtonEntryActive: {
       backgroundColor: colors.income,
       borderWidth: borderWidth.thin,
       borderColor: colors.stroke,
     },
-    typeButtonCreditActive: {
-      backgroundColor: colors.warning,
+    typeButtonSettlementActive: {
+      backgroundColor: colors.primary,
       borderWidth: borderWidth.thin,
       borderColor: colors.stroke,
     },

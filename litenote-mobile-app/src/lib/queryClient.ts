@@ -49,7 +49,7 @@ export const QUERY_KEYS = {
   // 分类相关
   categories: {
     all: ['categories'] as const,
-    byType: (type: 'income' | 'expense' | 'credit') => ['categories', type] as const,
+    byType: (type: 'entry' | 'expense' | 'credit') => ['categories', type] as const,
   },
 
   // 资产 Tab
